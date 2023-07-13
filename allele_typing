@@ -1,0 +1,64 @@
+# allele-typing
+
+{bash}
+
+# 1st step #
+
+fasta_file="cDNA.fasta"
+gene_names=("HLA-") # ("HLA-A" "HLA-C" "ETC..")
+pattern=$(IFS='|'; echo "${gene_names[*]}")
+seq_data=$(awk -v pattern="$pattern" -v RS=">" -v FS="\n" ' $1 ~ pattern { printf ">%s", $0 } ' "$fasta_file")
+echo "$seq_data" | awk '/^>/ { header=$0; getline; sequence=substr($0, 1, 15); print header"\n"sequence }' > short_seq.fasta
+
+# 2nd step #
+
+ls *.R2.fastq | xargs -I {} -P <num_processes> sh -c 'file="{}"
+
+    # Create a unique output file for the current fastq file
+    output_file="alleles/alleles_$(basename {} .R2.fastq).txt"
+
+    # Loop over each sequence in short_seq.fasta and process it
+    while IFS= read -r header; do
+        read -r sequence
+                
+        # Perform allele analysis on the current sequence
+        match=$(zcat "$file" | grep "$sequence")
+        sum_counts=$(echo "$match" | wc -l)
+        
+        allele_counts=$(echo "$match" | grep -v "^$" | sed -e "s/,$//" -e "s/.*\.\(.*\)\.\(.*\)$/\1.\2/" | sort | uniq -c)
+                                                         
+        # Sort the allele counts and get the sequence and percentage of the top 2 alleles
+        top_alleles=$(echo "$allele_counts" | sort -k1n,1 | tail -2)
+        percentages=$(echo "$top_alleles" | awk -v total="$sum_counts" "{printf \"%.2f%%\\n\", (\$1 * 100 / total)}")
+        
+        # Calculate the difference between the top 2 allele percentages
+        allele1_percentage=$(echo "$percentages" | awk 'NR==1{print}')
+        allele2_percentage=$(echo "$percentages" | awk 'NR==2{print}')
+        percentage_difference=$(awk -v a="$allele2_percentage" -v b="$allele1_percentage" "BEGIN {printf \"%.2f\\n\", a - b }")
+        percentage_difference=$(echo "$percentage_difference" | sed 's/,/./g')
+        percentages=$(echo "$percentages" | sed 's/,/./g')
+        
+        # Check if the percentage difference is higher than 50%
+        if [ "$(awk -v pd="$percentage_difference" "BEGIN {printf (pd > 50) ? "1" : "0"}")" -eq 1 ]; then
+            # Percentage difference is greater than 50%
+            typed_allele=$(echo "$top_alleles" | tail -1)
+        else
+            # Percentage difference is not greater than 50%
+            typed_allele=$(echo "$top_alleles")
+        fi
+                                                          
+        # Append the results to the output file
+        echo "$header: $sequence" >> "$output_file"
+        echo "Top 2 alleles:" >> "$output_file"
+        echo "$top_alleles" >> "$output_file"
+        echo "Total number of reads: $sum_counts" >> "$output_file"
+        echo "Percentage of the top 2 alleles:" >> "$output_file"
+        echo "$percentages" >> "$output_file"
+        echo "Difference between the top 2 alleles: $percentage_difference%" >> "$output_file"
+        echo "Typed alleles:" >> "$output_file"
+        echo "$typed_allele" >> "$output_file"
+        echo "----------------------" >> "$output_file"
+                                             
+    done < short_seq.fasta
+                                                       
+' 
