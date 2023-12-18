@@ -206,4 +206,4 @@ To facilitate the analysis of this output, we offer a structured data representa
 
 ## Authors: 
 
-- Ahmad Al Ajami, Katharina Imkeller
+- [Ahmad Al Ajami](https://github.com/ahmadalajami), [Katharina Imkeller](https://github.com/imkeller)
