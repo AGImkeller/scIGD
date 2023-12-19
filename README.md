@@ -43,11 +43,15 @@ $ cd scigd
 
 Then, download the workflow:
 
-`$ curl -L https://github.com/AGImkeller/scigd/tarball -o scigd.tar.gz`
+`$ curl -L https://api.github.com/repos/AGImkeller/ScSpAlleleQuant/tarball -o scigd.tar.gz`
 
-Next, extract the data: 
+Next, extract the data. On Linux, run:
 
-`$ tar -xzvf scigd.tar.gz`
+`$ tar --wildcards -xf scigd.tar.gz --strip 1 "*/data" "*/demo" "*/scripts" "*/Snakefile" "*/config.yaml" "*/environment.yaml"`
+
+On MacOS, run:
+
+`$ tar -xf scigd.tar.gz --strip 1 "*/data" "*/demo" "*/scripts" "*/Snakefile" "*/config.yaml" "*/environment.yaml"`
 
 This will create three files: `Snakefile`, `config.yaml` and `environment.yaml`. In addition, three folders will be created: `data`, `demo` and `scripts`. 
 
