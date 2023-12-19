@@ -34,24 +34,24 @@ This workflow is designed to support both *10x* and *BD Rhapsody* data, encompas
 
 ## Preparing a working directory
 
-First, create a new directory `scigd` at a place you can easily remember and change into that directory in your terminal:
+First, create a new directory `scIGD` at a place you can easily remember and change into that directory in your terminal:
 
 ```markdown
-$ mkdir scigd
-$ cd scigd
+$ mkdir scIGD
+$ cd scIGD
 ```
 
 Then, download the workflow:
 
-`$ curl -L https://api.github.com/repos/AGImkeller/ScSpAlleleQuant/tarball -o scigd.tar.gz`
+`$ curl -L https://api.github.com/repos/AGImkeller/ScSpAlleleQuant/tarball -o scIGD.tar.gz`
 
 Next, extract the data. On Linux, run:
 
-`$ tar --wildcards -xf scigd.tar.gz --strip 1 "*/data" "*/demo" "*/scripts" "*/Snakefile" "*/config.yaml" "*/environment.yaml"`
+`$ tar --wildcards -xf scIGD.tar.gz --strip 1 "*/data" "*/demo" "*/scripts" "*/Snakefile" "*/config.yaml" "*/environment.yaml"`
 
 On MacOS, run:
 
-`$ tar -xf scigd.tar.gz --strip 1 "*/data" "*/demo" "*/scripts" "*/Snakefile" "*/config.yaml" "*/environment.yaml"`
+`$ tar -xf scIGD.tar.gz --strip 1 "*/data" "*/demo" "*/scripts" "*/Snakefile" "*/config.yaml" "*/environment.yaml"`
 
 This will create three files: `Snakefile`, `config.yaml` and `environment.yaml`. In addition, three folders will be created: `data`, `demo` and `scripts`. 
 
@@ -74,15 +74,15 @@ First, make sure to activate the conda base environment with:
 
 `$ conda activate base`
 
-The `environment.yaml` file that you have obtained with the previous step (Preparing a working directory) can be used to install all required software into an isolated Conda environment with the name `scigd` via:
+The `environment.yaml` file that you have obtained with the previous step (Preparing a working directory) can be used to install all required software into an isolated Conda environment with the name `scIGD` via:
 
-`$ mamba env create --name scigd --file environment.yaml`
+`$ mamba env create --name scIGD --file environment.yaml`
 
 Written in C++, [Mamba](https://github.com/mamba-org/mamba) is a faster and more robust reimplementation of [Conda](https://docs.conda.io/en/latest/).
 
 Once the environment has been created, activate it by executing: 
 
-`$ conda activate scigd`
+`$ conda activate scIGD`
 
 and deactivate it by executing: 
 
