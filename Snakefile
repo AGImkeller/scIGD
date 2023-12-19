@@ -1,3 +1,5 @@
+# Snakefile
+
 configfile: 'config.yaml'
 
 rule all:
