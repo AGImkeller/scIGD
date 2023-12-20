@@ -43,7 +43,7 @@ $ cd scIGD
 
 Then, download the workflow:
 
-`$ curl -L https://api.github.com/repos/AGImkeller/ScSpAlleleQuant/tarball -o scIGD.tar.gz`
+`$ curl -L https://api.github.com/repos/AGImkeller/scIGD/tarball -o scIGD.tar.gz`
 
 Next, extract the data. On Linux, run:
 
