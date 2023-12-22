@@ -10,7 +10,7 @@ However, integrative single-cell methods commonly used to analyze immune cells i
 
 This *[Snakemake](https://snakemake.readthedocs.io/en/stable/)* workflow has been designed to automate and streamline the genotyping process for immune genes, focusing on key targets such as HLAs and KIRs, and enabling allele-specific quantification from single-cell RNA-sequencing (scRNA-seq) data using donor-specific references.
 
-The workflow is organized into three distinct stages, each addressing specific objectives:
+The workflow is organized into three distinct stages, each addressing specific objectives (Figure 1):
 
 1. **Demultiplexing multiplexed scRNA-seq datasets:**
    
@@ -29,6 +29,10 @@ The workflow is organized into three distinct stages, each addressing specific o
    - To harness the full analytical potential of the results, we've curated a dedicated `R` package, *[SingleCellAlleleExperiment](https://github.com/AGImkeller/SingleCellAlleleExperiment)*. This package provides a comprehensive multi-layer data structure, enabling the representation of immune genes at various levels, including alleles, genes, and functional aspects.
 
 This workflow is designed to support both *10x* and *BD Rhapsody* data, encompassing amplicon/targeted sequencing as well as whole-transcriptome-based data, providing flexibility to users working with different experimental setups.
+
+![alt text here](scIGD_SCAE_workflow.png)
+
+**Figure 1:** Overview of the *scIGD* workflow for unraveling immunogenomic diversity in single-cell data, highlighting the integration of the *SingleCellAlleleExperiment* package for comprehensive data analysis.
 
 # Installation
 
