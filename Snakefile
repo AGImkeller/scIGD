@@ -1,5 +1,3 @@
-# Snakefile
-
 configfile: 'config.yaml'
 
 rule all:
@@ -462,3 +460,12 @@ if config['wta']:
             cores=8
         shell:  
             "kb count -i {input.index} -g {input.t2g} -x {params.tech} -o {output} --mm --verbose {input.raw_data_fastq_list} > {log} 2>&1"
+
+## ------------------------------------------------------------------------------------ ##
+##                            Success and failure messages
+## ------------------------------------------------------------------------------------ ##
+onsuccess:
+	print("Success! The Snakemake workflow is completed.")
+
+onerror:
+	print("Error! The Snakemake workflow aborted.")
