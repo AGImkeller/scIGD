@@ -1,5 +1,8 @@
 # config.yaml
 
+# Important note:
+# All paths defined in this configuration file must be either absolute or relative to the location of the Snakefile!
+
 wta:
 multiplex:
 
