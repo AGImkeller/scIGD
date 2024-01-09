@@ -4,11 +4,11 @@ Immune molecules such as B and T cell receptors, human leukocyte antigens (HLAs)
 
 However, integrative single-cell methods commonly used to analyze immune cells in large patient cohorts do not consider this. This leads to erroneous quantification of important immune mediators and impaired inter-donor comparability, which ultimately obscures immunological information contained in the data.
 
-# scIGD: single-cell ImmunoGenomic Diversity
+# scIGD workflow
 
 ## Automated genotyping and allele-specific quantification for immune genes from scRNA-seq data
 
-This *[Snakemake](https://snakemake.readthedocs.io/en/stable/)* workflow has been designed to automate and streamline the genotyping process for immune genes, focusing on key targets such as HLAs and KIRs, and enabling allele-specific quantification from single-cell RNA-sequencing (scRNA-seq) data using donor-specific references.
+**scIGD** (**s**ingle-**c**ell **I**mmuno**G**enomic **D**iversity) is a *[Snakemake](https://snakemake.readthedocs.io/en/stable/)* workflow has been designed to automate and streamline the genotyping process for immune genes, focusing on key targets such as HLAs and KIRs, and enabling allele-specific quantification from single-cell RNA-sequencing (scRNA-seq) data using donor-specific references.
 
 The workflow is organized into three distinct stages, each addressing specific objectives (Figure 1):
 
