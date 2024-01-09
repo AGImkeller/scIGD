@@ -8,7 +8,7 @@ However, integrative single-cell methods commonly used to analyze immune cells i
 
 ## Automated genotyping and allele-specific quantification for immune genes from scRNA-seq data
 
-**scIGD** (**s**ingle-**c**ell **I**mmuno**G**enomic **D**iversity) is a *[Snakemake](https://snakemake.readthedocs.io/en/stable/)* workflow has been designed to automate and streamline the genotyping process for immune genes, focusing on key targets such as HLAs and KIRs, and enabling allele-specific quantification from single-cell RNA-sequencing (scRNA-seq) data using donor-specific references.
+**scIGD** (**s**ingle-**c**ell **I**mmuno**G**enomic **D**iversity) is a *[Snakemake](https://snakemake.readthedocs.io/en/stable/)* workflow that has been designed to automate and streamline the genotyping process for immune genes, focusing on key targets such as HLAs and KIRs, and enabling allele-specific quantification from single-cell RNA-sequencing (scRNA-seq) data using donor-specific references.
 
 The workflow is organized into three distinct stages, each addressing specific objectives (Figure 1):
 
