@@ -30,7 +30,7 @@ The workflow is organized into three distinct stages, each addressing specific o
 
 This workflow is designed to support both *10x* and *BD Rhapsody* data, encompassing amplicon/targeted sequencing as well as whole-transcriptome-based data, providing flexibility to users working with different experimental setups.
 
-![alt text here](scIGD_SCAE_workflow.png)
+![alt text here](./img/scIGD_SCAE_workflow.png)
 
 **Figure 1:** Overview of the *scIGD* workflow for unraveling immunogenomic diversity in single-cell data, highlighting the integration of the *SingleCellAlleleExperiment* package for comprehensive data analysis.
 
