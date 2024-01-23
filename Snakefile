@@ -1,12 +1,17 @@
+## configuration file
 configfile: 'config.yaml'
 
+## run all analyses
 rule all:
     input:
         "data/quant/kb_output_amplicon" if not config['wta'] else "data/quant/kb_output_WTA"
 
+## ------------------------------------------------------------------------------------ ##
+## demultiplexing, if needed
+## ------------------------------------------------------------------------------------ ##
 if config['multiplex']:
     
-    # demultiplexing
+    ## sample tag tsv file preparation 
     rule sample_tag_prep:
         input: 
             fasta=config['sample_tag_seqs']
@@ -17,6 +22,7 @@ if config['multiplex']:
         script:
             "scripts/1_sample_tag_prep.R"
 
+    ## building a sample tag index
     rule sample_tag_index:
         input:
             tsv="data/demultiplex/meta/sample_tag.tsv"
@@ -29,6 +35,7 @@ if config['multiplex']:
         shell:
             "kb ref -i {output.index} -f1 {output.fasta} -g {output.t2g} --workflow kite {input.tsv} > {log} 2>&1"
 
+    ## sample tag quantification
     rule sample_tag_quant:
         input:
             raw_data_fastq_list=config['raw_data_fastq_list'][0:2],
@@ -46,6 +53,7 @@ if config['multiplex']:
         shell:
             "kb count -i {input.index} -g {input.t2g} -x {params.tech} -o {output} --workflow kite {input.raw_data_fastq_list} > {log} 2>&1"
 
+    ## dataframe 1: cellular barcode + sample tag
     rule sample_tag_ident:
         input:
             dir="data/demultiplex/quant"
@@ -56,6 +64,7 @@ if config['multiplex']:
         script:
             "scripts/2_sample_tag_ident.R"
 
+    ## extracting cellular barcodes and their corresponding read IDs
     rule sample_tag_id:
         input:
             fastq1=config['raw_data_fastq_list'][0]
@@ -75,6 +84,7 @@ if config['multiplex']:
                 """
             )
 
+    ## dataframe 2: cellular barcode + ID
     rule sample_tag_id2:
         input:
             cb="data/demultiplex/splitting/cb.txt",
@@ -86,6 +96,7 @@ if config['multiplex']:
         shell:
             "paste -d '\t' {input.cb} {input.id} > {output.df2}"
 
+    ## sorting both dataframes
     rule sample_tag_sort:
         input:
             df1="data/demultiplex/splitting/df1.txt",
@@ -104,6 +115,7 @@ if config['multiplex']:
                 """
             )
 
+    ## joining both dataframes --> dataframe: ceullar barcode + sample tag + ID
     rule sample_tag_join:
         input:
             df1_sorted="data/demultiplex/splitting/df1_sorted.txt",
@@ -115,6 +127,7 @@ if config['multiplex']:
         shell:
             "join -t $'\t' -1 1 -2 1 {input.df2_sorted} {input.df1_sorted} > {output.df}"
 
+    ## creating as many dataframes as sample tags; each dataframe contains IDs that belong to one specific sample tag
     rule sample_tag_df:
         input:
             "data/demultiplex/splitting/df.txt"
@@ -128,6 +141,7 @@ if config['multiplex']:
                 """
             )
 
+    ## splitting the original fastq file into as many fastqs as sample tags according to the ID dataframes created in the previous rule
     rule fastq_split:
         input: 
             fastq=config['raw_data_fastq_list'][1],
@@ -144,9 +158,15 @@ if config['multiplex']:
                 """
             )
 
+## ------------------------------------------------------------------------------------ ##
+## amplicon-based data
+## ------------------------------------------------------------------------------------ ##
 if not config['wta']:
 
-    # amplicon allele-typing
+    ## ------------------------------------------------------------------------------------ ##
+    ## allele-typing
+    ## ------------------------------------------------------------------------------------ ##
+    ## changing cDNA headers
     rule change_headers: 
         input:
             original_fasta=config['amplicon_cDNA_fasta']
@@ -155,6 +175,7 @@ if not config['wta']:
         shell:
             "cat {input} | sed 's/location.*AMPLICON//' > {output}"
 
+    ## trimming sequences on which allele-typing will be performed to 15bp
     rule extract_sequences: 
         input:
             cdna_fasta="data/allele_typing/cDNA.fasta"
@@ -172,7 +193,7 @@ if not config['wta']:
                 echo "$seq_data" | awk '/^>/ {{ header=$0; getline; sequence=substr($0, 1, 15); print header"\\n"sequence }}' > {output.short_seq}
                 """
             )
-
+    ## performing allele-typing
     rule allele_typing:
         input:
             fastq=lambda wildcards: "data/demultiplex/splitting/fastq" if config['multiplex'] else "data/raw",
@@ -191,7 +212,10 @@ if not config['wta']:
                 """
             )
 
-    # amplicon quantification
+    ## ------------------------------------------------------------------------------------ ##
+    ## quantification
+    ## ------------------------------------------------------------------------------------ ##
+    ## adding the typed-allele sequences into our final cDNA file
     rule final_cDNA_fasta:
         input:
             alleles_dir="data/allele_typing/alleles",
@@ -210,6 +234,7 @@ if not config['wta']:
                 """
             )
 
+    ## creating a transcript to gene txt file
     rule create_t2g: 
         input:
             cDNA="data/quant/cDNA.fasta"
@@ -223,7 +248,8 @@ if not config['wta']:
                 paste <(echo "$file1") <(echo "$file2") > {output.t2g}
                 """
             )
-
+    
+    ## creating cDNA index
     rule create_index:
         input:
             cDNA="data/quant/cDNA.fasta"
@@ -231,7 +257,8 @@ if not config['wta']:
             index="data/quant/index.idx"
         shell:
             "kallisto index -i {output.index} {input.cDNA}"
-
+    
+    ## quantification using kallisto
     rule quantification:
         input:
             index="data/quant/index.idx",
@@ -249,9 +276,15 @@ if not config['wta']:
         shell:  
             "kb count -i {input.index} -g {input.t2g} -x {params.tech} -o {output} --mm --verbose {input.raw_data_fastq_list} > {log} 2>&1"
 
+## ------------------------------------------------------------------------------------ ##
+## whole transcriptome data
+## ------------------------------------------------------------------------------------ ##
 if config['wta']:
 
-    # WTA allele-typing
+    ## ------------------------------------------------------------------------------------ ##
+    ## allele-typing
+    ## ------------------------------------------------------------------------------------ ##
+    ## unzipping reference and gtf files
     rule gunzip:
         input:
             fasta=config['reference_genome_fasta'],
@@ -267,6 +300,7 @@ if config['wta']:
                 """
             )
 
+    ## STAR genome generation
     rule genome_generation: 
         input:
             fasta="data/meta/dna.primary_assembly.fa",
@@ -278,6 +312,7 @@ if config['wta']:
         shell:
             "STAR --runMode genomeGenerate --genomeDir {output.genome_dir} --runThreadN {params.threads_number} --genomeSAindexNbases 14 --genomeFastaFiles {input.fasta} --sjdbGTFfile {input.gtf}"
 
+    ## STAR alignment
     rule read_alignment:
         input:
             fastq=lambda wildcards: "data/demultiplex/splitting/fastq/*" if config['multiplex'] else config['raw_data_fastq_list'],
@@ -288,7 +323,8 @@ if config['wta']:
             threads_number=config['threads_number']
         shell:
             "STAR --outFilterScoreMinOverLread 0.3 --outFilterMatchNminOverLread 0.3 --runThreadN {params.threads_number} --genomeDir {input.genome_dir} --readFilesCommand zcat --readFilesIn {input.fastq} --outFileNamePrefix {output.star}"
-
+    
+    ## SAM to BAM conversion
     rule sam_to_bam:
         input:
             sam="data/allele_typing/STAR_alignment/Aligned.out.sam"
@@ -305,6 +341,7 @@ if config['wta']:
                 """
             )
 
+    ## sorting BAM file
     rule bam_sort: 
         input:
             bam="data/allele_typing/STAR_alignment/Aligned.out.bam"
@@ -316,6 +353,7 @@ if config['wta']:
         shell:
             "samtools sort {input.bam} -o {output.sorted_bam}"
 
+    ## indexing BAM file
     rule bam_index:
         input:
             sorted_bam="data/allele_typing/STAR_alignment/Aligned.out.sorted.bam"
@@ -327,6 +365,7 @@ if config['wta']:
         shell:
             "samtools index {input.sorted_bam}"
 
+    ## extracting reads mapping to chromosome 6
     rule reads_extract:
         input:
             bam="data/allele_typing/STAR_alignment/Aligned.out.sorted.bam",
@@ -344,6 +383,7 @@ if config['wta']:
                 """
             )
 
+    ## performing allele-typing
     rule allele_typing:
         input:
             chr6_fastq="data/allele_typing/output/"
@@ -361,6 +401,7 @@ if config['wta']:
                 """
             )
 
+    ## changing allele headers
     rule allele_headers:
         input:
             genotype="data/allele_typing/alleles",
@@ -377,6 +418,7 @@ if config['wta']:
                 """
             )
 
+    ## creating a cDNA file from the typed-allele sequences
     rule allele_fasta:
         input:
             allele_headers="data/matching_headers.txt",
@@ -387,8 +429,10 @@ if config['wta']:
             """
             awk 'NR==FNR{{a[">"$0];next}} /^>/{{f=$0 in a}} f' {input.allele_headers} {input.cdna} > {output.allele_cdna}    
             """
-
-    # WTA quantification
+    ## ------------------------------------------------------------------------------------ ##
+    ## quantification
+    ## ------------------------------------------------------------------------------------ ##
+    ## creating a transcript to gene txt file & cDNA index & final cDNA
     rule ref_cDNA_fasta:
         input:
             fasta=config['reference_genome_fasta'],
@@ -444,6 +488,7 @@ if config['wta']:
         shell:
             "kallisto index -i {output.index} {input.cDNA}"
 
+    ## quantification using kallisto
     rule quantification:
         input:
             index="data/quant/index.idx",
