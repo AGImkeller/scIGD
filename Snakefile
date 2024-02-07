@@ -306,7 +306,7 @@ if config['wta']:
             fasta="data/meta/dna.primary_assembly.fa",
             gtf="data/meta/gtf.gtf"
         output:
-            genome_dir=temp("data/allele_typing/GenomeDir")
+            genome_dir=directory("data/allele_typing/GenomeDir")
         params: 
             threads_number=config['threads_number']
         shell:
@@ -315,38 +315,21 @@ if config['wta']:
     ## STAR alignment
     rule read_alignment:
         input:
-            fastq=lambda wildcards: "data/demultiplex/splitting/fastq/*" if config['multiplex'] else config['raw_data_fastq_list'],
+            fastq=lambda wildcards: "data/demultiplex/splitting/fastq/*"[:2] if config['multiplex'] else config['raw_data_fastq_list'][:2],
             genome_dir="data/allele_typing/GenomeDir"
         output:
-            star="data/allele_typing/STAR_alignment/"
+            star=temp("data/allele_typing/STAR_alignment/Aligned.out.bam")
         params:
             threads_number=config['threads_number']
         shell:
-            "STAR --outFilterScoreMinOverLread 0.3 --outFilterMatchNminOverLread 0.3 --runThreadN {params.threads_number} --genomeDir {input.genome_dir} --readFilesCommand zcat --readFilesIn {input.fastq} --outFileNamePrefix {output.star}"
-    
-    ## SAM to BAM conversion
-    rule sam_to_bam:
-        input:
-            sam="data/allele_typing/STAR_alignment/Aligned.out.sam"
-        output:
-            bam=temp("data/allele_typing/STAR_alignment/Aligned.out.bam")
-        resources:
-            mem_gb=8,
-            cores=8
-        run:
-            shell(
-                """
-                samtools view -b -S -o {output.bam} {input.sam}
-                rm data/allele_typing/STAR_alignment/Aligned.out.sam
-                """
-            )
+            "STAR --outFilterScoreMinOverLread 0.3 --outFilterMatchNminOverLread 0.3 --outSAMtype BAM Unsorted --runThreadN {params.threads_number} --genomeDir {input.genome_dir} --readFilesCommand zcat --readFilesIn {input.fastq} --outFileNamePrefix data/allele_typing/STAR_alignment/"
 
     ## sorting BAM file
     rule bam_sort: 
         input:
             bam="data/allele_typing/STAR_alignment/Aligned.out.bam"
         output:
-            sorted_bam=temp("data/allele_typing/STAR_alignment/Aligned.out.sorted.bam")
+            sorted_bam="data/allele_typing/STAR_alignment/Aligned.out.sorted.bam"
         resources:
             mem_gb=8,
             cores=8
@@ -358,7 +341,7 @@ if config['wta']:
         input:
             sorted_bam="data/allele_typing/STAR_alignment/Aligned.out.sorted.bam"
         output:
-            bam_index=temp("data/allele_typing/STAR_alignment/Aligned.out.sorted.bam.bai")
+            bam_index="data/allele_typing/STAR_alignment/Aligned.out.sorted.bam.bai"
         resources:
             mem_gb=4,
             cores=4
@@ -376,12 +359,11 @@ if config['wta']:
             is_single=config['single_end_samples'],
             threads_number=config['threads_number']
         run:
-            shell(
-                """
-                arcasHLA reference --version 3.9.0 -v
-                arcasHLA extract {input.bam} -o {output.arcasHLA} -t {params.threads_number} { "--single" if params.is_single else "" } -v
-                """
-            )
+            shell("arcasHLA reference --version 3.9.0 -v")
+            if str(params.is_single).lower() == 'true':
+                shell("arcasHLA extract {input.bam} -o {output.arcasHLA} -t {params.threads_number} -v --single")
+            if str(params.is_single).lower() == 'false':
+                shell("arcasHLA extract {input.bam} -o {output.arcasHLA} -t {params.threads_number} -v")
 
     ## performing allele-typing
     rule allele_typing:
@@ -396,8 +378,8 @@ if config['wta']:
         run:
             shell(
                 """
-                genes=$(echo {params.genes_to_be_allele_typed} | sed s/HLA-//g; s/ /,/g')
-                arcasHLA genotype {input.chr6_fastq}/*.fq.gz -o {output.arcasHLA} -g "$genes" -t {params.threads_number} { "--single" if params.is_single else "" } -v
+                genes=$(echo {params.genes_to_be_allele_typed} | sed 's/HLA-//g; s/ /,/g')
+                arcasHLA genotype {input.chr6_fastq}/*.fq.gz -o {output.arcasHLA} -g "$genes" -t {params.threads_number} {{ "--single" if params.is_single else "" }} -v
                 """
             )
 
