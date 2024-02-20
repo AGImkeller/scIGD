@@ -370,7 +370,7 @@ if config['wta']:
         input:
             chr6_fastq="data/allele_typing/output/"
         output:
-            arcasHLA=directory("data/allele_typing/alleles")
+            arcasHLA="data/allele_typing/alleles/Aligned.genotype.json"
         params:
             genes_to_be_allele_typed=config['genes_to_be_allele_typed'],
             is_single=config['single_end_samples'],
@@ -379,14 +379,14 @@ if config['wta']:
             shell(
                 """
                 genes=$(echo {params.genes_to_be_allele_typed} | sed 's/HLA-//g; s/ /,/g')
-                arcasHLA genotype {input.chr6_fastq}/*.fq.gz -o {output.arcasHLA} -g "$genes" -t {params.threads_number} {{ "--single" if params.is_single else "" }} -v
+                arcasHLA genotype {input.chr6_fastq}/*.fq.gz -o data/allele_typing/alleles/ -g "$genes" -t {params.threads_number} {{ "--single" if params.is_single else "" }} -v
                 """
             )
 
     ## changing allele headers
     rule allele_headers:
         input:
-            genotype="data/allele_typing/alleles",
+            genotype="data/allele_typing/alleles/Aligned.genotype.json",
             allelelist="data/meta/Allelelist.txt",
             cdna="data/meta/hla_nuc.fasta",
             script="scripts/5_allele_headers.sh"
@@ -396,7 +396,7 @@ if config['wta']:
             shell(
                 """
                 chmod +x {input.script}
-                ./{input.script} {input.genotype}/Aligned.genotype.json {input.allelelist} {input.cdna} {output.allele_headers}
+                ./{input.script} {input.genotype} {input.allelelist} {input.cdna} {output.allele_headers}
                 """
             )
 
@@ -422,7 +422,7 @@ if config['wta']:
         output:
             index="data/quant/meta/ref_index.idx",
             t2g="data/quant/meta/ref_t2g.txt",
-            fasta="data/quant/genes_cDNA.fa"
+            fasta=temp("data/quant/genes_cDNA.fa")
         resources:
             mem_gb=8,
             cores=8
