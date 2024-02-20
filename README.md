@@ -210,6 +210,7 @@ To facilitate the analysis of this output, we offer a structured data representa
 
 ## Data resources
 
+- 10x Genomics: https://www.10xgenomics.com/datasets.
 - Ensembl: Martin F. *et al*, (2023). Nucleic Acids Research, 51, 933-941.
 
 ## Authors
