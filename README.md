@@ -174,6 +174,8 @@ This workflow has been rigorously tested. Here, we report two distinct scenarios
 
 As a product of *kallisto*, the output comprises a count matrix (`cells_x_genes.mtx`), a feature list encompassing genes and typed-alleles (`cells_x_genes.genes.txt`), and a barcode list (`cells_x_genes.barcodes.txt`). The matrix serves as a rich source for downstream analysis and exploration, capturing the nuanced expression levels of genes and specifically typed alleles. 
 
+Example datasets and outputs are available in our data package hosted on `ExperimentHub`: *[scaeData](https://github.com/AGImkeller/scaeData)*.
+
 To facilitate the analysis of this output, we offer a structured data representation in the form of an `R` package named *[SingleCellAlleleExperiment](https://github.com/AGImkeller/SingleCellAlleleExperiment)*. For detailed instructions on utilizing this package, please refer to its documentation.
 
 # References
@@ -191,6 +193,8 @@ To facilitate the analysis of this output, we offer a structured data representa
 - ShortRead: Morgan M. *et al.*, (2009). ShortRead - a Bioconductor package for input, quality assessment and exploration of high-throughput sequence data. Bioinformatics 25:2607-2608.
 
 - sparseMatrixStats: Ahlmann-Eltze C. (2023). sparseMatrixStats - summary statistics for rows and columns of sparse matrices.
+
+- ExperimentHub: Morgan M, Shepherd L (2023). ExperimentHub - client to access ExperimentHub resources.
 
 - kb-python: Melsted P., Booeshaghi A.S. *et al*, (2021). Modular, efficient and constant-memory single-cell RNA-seq preprocessing. Nature Biotechnoly 39, 813-818.
 
@@ -211,6 +215,7 @@ To facilitate the analysis of this output, we offer a structured data representa
 ## Data resources
 
 - 10x Genomics: https://www.10xgenomics.com/datasets.
+
 - Ensembl: Martin F. *et al*, (2023). Nucleic Acids Research, 51, 933-941.
 
 ## Authors
