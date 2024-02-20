@@ -218,6 +218,8 @@ To facilitate the analysis of this output, we offer a structured data representa
 
 - Ensembl: Martin F. *et al*, (2023). Nucleic Acids Research, 51, 933-941.
 
+## Citation
+
 ## Authors
 
 - [Ahmad Al Ajami](https://github.com/ahmadalajami), [Katharina Imkeller](https://github.com/imkeller)
