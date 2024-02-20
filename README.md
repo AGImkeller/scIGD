@@ -68,7 +68,7 @@ $ curl -L https://github.com/conda-forge/miniforge/releases/latest/download/Mamb
 $ bash Mambaforge-Linux-x86_64.sh
 ```
 
-When you are asked the question
+If you are asked the question
 
 `Do you wish the installer to prepend the install location to PATH ...? [yes|no]`
 
@@ -118,11 +118,11 @@ The configuration for this workflow is designed to offer flexibility and adaptab
 
 - `wta`: Determines the experiment setup. Set to `true` for whole-transcriptome-based data, and `false` for amplicon-based data.
 
-- `multiplex`: Specifies the presence of multiple donors in a dataset. Set to `true` for multiplexed data, and `false` for datasets with a single donor.
+- `multiplex`: Specifies the presence of multiple donors in a dataset. Set to `true` for multiplexed data, and `false` for datasets with a single donor. Currently, this feature only works for BD Rhapsody data.
 
 - `threads_number`: Set the desired number of threads or cores. For optimal performance, match this value with available computational resources.
 
-- `sequencing_technology`: Indicates the sequencing technology used, such as `10XV{1/2/3}` or `BDWTA`.
+- `sequencing_technology`: Indicates the sequencing technology used, such as `10XV{1/2/3}` or `BDWTA`. To display the list of supported technologies, run `kb --list`.
 
 - `genes_to_be_allele_typed`: Provides a list of gene names for allele typing. This parameter specifically supports HLA genes and will be extended to include KIRs in future releases.
 
