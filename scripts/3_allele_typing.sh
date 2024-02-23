@@ -13,10 +13,10 @@ ls "$fastq"/*.R2.fastq.gz | xargs -I {} -P "$num_processes" sh -c 'file="{}"
         sum_counts=$(echo "$match" | wc -l)
         allele_counts=$(echo "$match" | grep -v "^$" | sed -e "s/,$//" -e "s/.*\.\(.*\)\.\(.*\)$/\1.\2/" | sort | uniq -c)
         top_alleles=$(echo "$allele_counts" | sort -k1n,1 | tail -2)
-        percentages=$(echo "$top_alleles" | awk -v total="$sum_counts" '\''{printf "%.2f%%\\n", ($1 * 100 / total)}'\'')
+        percentages=$(echo "$top_alleles" | awk -v total="$sum_counts" '\''{printf "%.2f%%\n", ($1 * 100 / total)}'\'')
         allele1_percentage=$(echo "$percentages" | awk 'NR==1{print}')
         allele2_percentage=$(echo "$percentages" | awk 'NR==2{print}')
-        percentage_difference=$(awk -v a="$allele2_percentage" -v b="$allele1_percentage" '\''BEGIN {printf "%.2f\\n", a - b }'\'')
+        percentage_difference=$(awk -v a="$allele2_percentage" -v b="$allele1_percentage" '\''BEGIN {printf "%.2f\n", a - b }'\'')
         percentage_difference=$(echo "$percentage_difference" | sed 's/,/./g')
         percentages=$(echo "$percentages" | sed 's/,/./g')
 
