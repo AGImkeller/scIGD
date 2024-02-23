@@ -273,8 +273,11 @@ if not config['wta']:
         resources:
             mem_gb=8,
             cores=8
-        shell:  
-            "kb count -i {input.index} -g {input.t2g} -x {params.tech} -o {output} --mm --verbose {input.raw_data_fastq_list} > {log} 2>&1"
+        shell:
+            """  
+            kb count -i {input.index} -g {input.t2g} -x {params.tech} -o {output} --mm --verbose {input.raw_data_fastq_list} > {log} 2>&1
+            mv data/quant/lookup_table_HLA.csv data/quant/kb_output_amplicon/counts_unfiltered/
+            """
 
 ## ------------------------------------------------------------------------------------ ##
 ## whole transcriptome data
@@ -376,12 +379,20 @@ if config['wta']:
             is_single=config['single_end_samples'],
             threads_number=config['threads_number']
         run:
-            shell(
-                """
-                genes=$(echo {params.genes_to_be_allele_typed} | sed 's/HLA-//g; s/ /,/g')
-                arcasHLA genotype {input.chr6_fastq}/*.fq.gz -o data/allele_typing/alleles/ -g "$genes" -t {params.threads_number} {{ "--single" if params.is_single else "" }} -v
-                """
-            )
+            if str(params.is_single).lower() == 'true':
+                shell(
+                    """
+                    genes=$(echo {params.genes_to_be_allele_typed} | sed 's/HLA-//g; s/ /,/g')
+                    arcasHLA genotype {input.chr6_fastq}/*.fq.gz -o data/allele_typing/alleles/ -g "$genes" -t {params.threads_number} -v --single
+                    """
+                )
+            if str(params.is_single).lower() == 'false':
+                shell(
+                    """
+                    genes=$(echo {params.genes_to_be_allele_typed} | sed 's/HLA-//g; s/ /,/g')
+                    arcasHLA genotype {input.chr6_fastq}/*.fq.gz -o data/allele_typing/alleles/ -g "$genes" -t {params.threads_number} -v
+                    """
+                )
 
     ## changing allele headers
     rule allele_headers:
@@ -406,11 +417,14 @@ if config['wta']:
             allele_headers="data/matching_headers.txt",
             cdna="data/meta/hla_nuc.fasta"
         output:
-            allele_cdna="data/allele_typing/allele_cDNA.fasta"
+            allele_cdna="data/allele_typing/allele_cDNA.fasta",
+            lookup_table="data/allele_typing/lookup_table_HLA.csv"
         shell:
             """
-            awk 'NR==FNR{{a[">"$0];next}} /^>/{{f=$0 in a}} f' {input.allele_headers} {input.cdna} > {output.allele_cdna}    
+            awk 'NR==FNR{{a[">"$0];next}} /^>/{{f=$0 in a}} f' {input.allele_headers} {input.cdna} > {output.allele_cdna}
+            echo "Allele,Gene,Function" > {output.lookup_table} && cat {output.allele_cdna} | awk '/^>/ {{ header=substr($0,2); split(header, fields, " "); gene = substr(fields[2], 1, index(fields[2], "*") - 1); print fields[2] "," "HLA-" gene}}' | awk -F, 'BEGIN {{OFS=","}} NR>0 {{if ($2=="HLA-A" || $2=="HLA-B" || $2=="HLA-C") $3="HLA_class_I"; else if ($2=="HLA-DRA" || $2=="HLA-DRB1" || $2=="HLA-DRB3" || $2=="HLA-DRB4" || $2=="HLA-DRB5" || $2=="HLA-DQA1" || $2=="HLA-DQA2" || $2=="HLA-DQB1" || $2=="HLA-DQB2" || $2=="HLA-DPA1" || $2=="HLA-DPA2" || $2=="HLA-DPB1" || $2=="HLA-DPB2" || $2=="HLA-DMA" || $2=="HLA-DMB") $3="HLA_class_II"; else if ($2=="HLA-E" || $2=="HLA-F" || $2=="HLA-G") $3="HLA_non_classical"}} 1' >> {output.lookup_table}
             """
+
     ## ------------------------------------------------------------------------------------ ##
     ## quantification
     ## ------------------------------------------------------------------------------------ ##
@@ -485,8 +499,11 @@ if config['wta']:
         resources:
             mem_gb=8,
             cores=8
-        shell:  
-            "kb count -i {input.index} -g {input.t2g} -x {params.tech} -o {output} --mm --verbose {input.raw_data_fastq_list} > {log} 2>&1"
+        shell:
+            """  
+            kb count -i {input.index} -g {input.t2g} -x {params.tech} -o {output} --mm --verbose {input.raw_data_fastq_list} > {log} 2>&1
+            mv data/allele_typing/lookup_table_HLA.csv data/quant/kb_output_WTA/counts_unfiltered/
+            """
 
 ## ------------------------------------------------------------------------------------ ##
 ##                            Success and failure messages
