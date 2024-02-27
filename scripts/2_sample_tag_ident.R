@@ -1,5 +1,3 @@
-# R
-
 suppressPackageStartupMessages({
   library(ShortRead)
   library(Matrix)
@@ -10,8 +8,9 @@ suppressPackageStartupMessages({
 dir.tags <- snakemake@input[["dir"]]
 tags <- readMM(paste0(dir.tags, "/counts_unfiltered/cells_x_features.mtx", ""))
 cells <- read.table(paste0(dir.tags, "/counts_unfiltered/cells_x_features.barcodes.txt", ""), header = FALSE)
+samples <- read.table(paste0(dir.tags, "/counts_unfiltered/cells_x_features.genes.txt", ""), header = FALSE)
 rownames(tags) <- cells$V1
-colnames(tags) <- paste("ST_", 1:12, sep = "")
+colnames(tags) <- samples$V1
 tags <- as(tags, "CsparseMatrix")
 df1 <- data.frame(Cellular.Barcode = rownames(tags),
                   Sample.Tag = ifelse(sparseMatrixStats::rowMaxs(tags) >= 0.75 * rowSums(tags),
