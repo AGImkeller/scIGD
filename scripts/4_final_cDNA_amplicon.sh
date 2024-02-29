@@ -37,7 +37,9 @@ conc_alleles=$(awk '
 
 cDNA_HLA=$(echo "$conc_alleles" | awk '/^>/{if (header != "") sequences=0; header=$0; sub(/\|.*/, "", header); next} {sequences++; print header "-AV-" sequences; print}')
 
-cDNA_RNA_filtered=$(grep -v "${gene_names}" "$cDNA_RNA")
+cDNA_RNA_filtered=$(awk '(NR==FNR) { toRemove[$1]; next }
+    /^>/ { p=1; for(h in toRemove) if ( h ~ $0) p=0 }
+    p' "$gene_names" "$cDNA_RNA")
 
 echo -e -n "${cDNA_RNA_filtered}\n${cDNA_HLA}" > "$output_cDNA"
 

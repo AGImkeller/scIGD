@@ -229,8 +229,11 @@ if not config['wta']:
         run:
             shell(
                 """
+                toremove=({params.genes})
+                printf ">%s\n" "${{toremove[@]}}" | tr -d ',' > data/quant/toremove.txt
                 chmod +x {input.script}
-                ./{input.script} {input.alleles_dir} {params.genes} {input.genes_cDNA} {output.cDNA} {output.lookup_table}
+                ./{input.script} {input.alleles_dir} data/quant/toremove.txt {input.genes_cDNA} {output.cDNA} {output.lookup_table}
+                rm data/quant/toremove.txt
                 """
             )
 
