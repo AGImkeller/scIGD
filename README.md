@@ -140,7 +140,7 @@ The configuration for this workflow is designed to offer flexibility and adaptab
 
 - `reference_genome_fasta`: Provides the path to the FASTA file containing the primary assembly of the reference genome. Set for whole-transcriptome-based data.
 
-Examples for populating these parameters are provided in the `demo/config_demo.yaml` file. 
+Examples for populating these parameters are provided in the `demo/configDemo.yaml` file. 
 
 Please ensure you input your values directly into the `config.yaml` file.
 
@@ -169,6 +169,8 @@ This workflow has been rigorously tested. Here, we report two distinct scenarios
 
    - 1 donor, 50 million reads in 1 FASTQ file
    - Completed in ~ 3 hours utilizing 32 CPU cores and 40 GB of memory
+
+When dealing with whole-transcriptome-based data, it is advisable to use the tool on a cluster. A Snakefile that was executed on a SLURM cluster can be found in `demo/SnakefileCluster`. It was run with the following parameters: `nodes=1`, `ntasks=1`, `cpus-per-task=40` and `mem-per-cpu=2000`.
 
 # Output
 
