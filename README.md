@@ -176,6 +176,8 @@ When dealing with whole-transcriptome-based data, it is advisable to use the too
 
 As a product of *kallisto*, the output comprises a count matrix (`cells_x_genes.mtx`), a feature list encompassing genes and typed-alleles (`cells_x_genes.genes.txt`), and a barcode list (`cells_x_genes.barcodes.txt`). The matrix serves as a rich source for downstream analysis and exploration, capturing the nuanced expression levels of genes and specifically typed alleles. 
 
+In addition, the output includes a lookup table (`lookup_table_HLA.csv`) to facilitate the creation of the relevant additional data layers during object generation for analysis.
+
 Example datasets and outputs are available in our data package hosted on `ExperimentHub`: *[scaeData](https://github.com/AGImkeller/scaeData)*.
 
 To facilitate the analysis of this output, we offer a structured data representation in the form of an `R` package named *[SingleCellAlleleExperiment](https://github.com/AGImkeller/SingleCellAlleleExperiment)*. For detailed instructions on utilizing this package, please refer to its documentation.
