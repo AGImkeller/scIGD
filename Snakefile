@@ -402,7 +402,7 @@ if config['wta']:
         input:
             genotype="data/allele_typing/alleles/Aligned.genotype.json",
             allelelist="data/meta/Allelelist.txt",
-            cdna="data/meta/hla_nuc.fasta",
+            cdna="data/meta/hla_gen.fasta",
             script="scripts/5_allele_headers.sh"
         output:
             allele_headers=temp("data/matching_headers.txt")
@@ -418,7 +418,7 @@ if config['wta']:
     rule allele_fasta:
         input:
             allele_headers="data/matching_headers.txt",
-            cdna="data/meta/hla_nuc.fasta"
+            cdna="data/meta/hla_gen.fasta"
         output:
             allele_cdna="data/allele_typing/allele_cDNA.fasta",
             lookup_table="data/allele_typing/lookup_table_HLA.csv"
