@@ -24,6 +24,7 @@ dependencies:
   - seqtk=1.4
   - star=2.7.10b
   - samtools=1.15
+  - cryptography<43.0.0
 
   # HLA typing tool and its dependency
   - arcas-hla=0.5.0
