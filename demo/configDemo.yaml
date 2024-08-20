@@ -5,10 +5,8 @@ multiplex: false
 
 threads_number: "12"
 sequencing_technology: "10XV3"
-genes_to_be_allele_typed: ["HLA-A","HLA-B","HLA-C","HLA-DPB1","HLA-DQB1","HLA-DQA1","HLA-DRB1"] # a list
-raw_data_fastq_list: ["data/raw/PBMC.L001.R1.fastq.gz", "data/raw/PBMC.L001.R2.fastq.gz", "data/raw/PBMC.L002.R1.fastq.gz", "data/raw/PBMC.L002.R2.fastq.gz",
-                     "data/raw/PBMC.L003.R1.fastq.gz", data/raw/PBMC.L003.R2.fastq.gz", data/raw/PBMC.L004.R1.fastq.gz", data/raw/PBMC.L004.R2.fastq.gz"] 
-                     # a list; fastq files must have the following format: {dir_raw_fastq}/*.R{1/2}.fastq.gz
+genes_to_be_allele_typed: ["HLA-A","HLA-B","HLA-C","HLA-DPA1","HLA-DPB1","HLA-DQA1","HLA-DQB1","HLA-DRA","HLA-DRB1","HLA-DRB3","HLA-DRB5"] # a list
+raw_data_fastq_list: ["data/raw/PBMC.L001.R1.fastq.gz", "data/raw/PBMC.L001.R2.fastq.gz", "data/raw/PBMC.L002.R1.fastq.gz", "data/raw/PBMC.L002.R2.fastq.gz"] # a list; fastq files must have the following format: {dir_raw_fastq}/*.R{1/2}.fastq.gz
 
 sample_tag_seqs: "data/meta/SampleTagSequences.fasta" # only if multiplexed
 
