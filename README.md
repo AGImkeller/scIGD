@@ -67,7 +67,11 @@ On MacOS, run:
 tar -xf scIGD.tar.gz --strip 1 "*/data" "*/demo" "*/scripts" "*/Snakefile" "*/config.yaml" "*/environment.yaml"
 ```
 
-This will create three files: `Snakefile`, `config.yaml` and `environment.yaml`. In addition, three folders will be created: `data`, `demo` and `scripts`.
+This will create three files: `Snakefile`, `config.yaml` and `environment.yaml`. In addition, three folders will be created: `data`, `demo` and `scripts` (Figure 2).
+
+![alt text here](./img/folder_structure.png)
+
+**Figure 2:** Overview of the folder strcutre.
 
 ## Creating an environment with the required software
 
@@ -114,11 +118,7 @@ conda deactivate
 
 # Input data
 
-Upon preparation of the working directory, two essential folders were generated: `data` and `scripts` (Figure 2).
-
-![alt text here](./img/folder_structure.png)
-
-**Figure 2:** Overview of the folder strcutre.
+Upon preparation of the working directory, two essential folders were generated: `data` and `scripts`.
 
 The `scripts` directory houses essential scripts integral to the workflow's execution, requiring no user intervention.
 
