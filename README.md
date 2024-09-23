@@ -45,31 +45,37 @@ This workflow is designed to support both *10x* and *BD Rhapsody* data, encompas
 First, create a new directory `scIGD` at a place you can easily remember and change into that directory in your terminal:
 
 ```bash
-$ mkdir scIGD
-$ cd scIGD
+mkdir scIGD
+cd scIGD
 ```
 
 Then, download the workflow:
 
-`$ curl -L https://api.github.com/repos/AGImkeller/scIGD/tarball -o scIGD.tar.gz`
+```bash
+curl -L https://api.github.com/repos/AGImkeller/scIGD/tarball -o scIGD.tar.gz
+```
 
 Next, extract the data. On Linux, run:
 
-`$ tar --wildcards -xf scIGD.tar.gz --strip 1 "*/data" "*/demo" "*/scripts" "*/Snakefile" "*/config.yaml" "*/environment.yaml"`
+```bash
+tar --wildcards -xf scIGD.tar.gz --strip 1 "*/data" "*/demo" "*/scripts" "*/Snakefile" "*/config.yaml" "*/environment.yaml"
+```
 
 On MacOS, run:
 
-`$ tar -xf scIGD.tar.gz --strip 1 "*/data" "*/demo" "*/scripts" "*/Snakefile" "*/config.yaml" "*/environment.yaml"`
+```bash
+tar -xf scIGD.tar.gz --strip 1 "*/data" "*/demo" "*/scripts" "*/Snakefile" "*/config.yaml" "*/environment.yaml"
+```
 
-This will create three files: `Snakefile`, `config.yaml` and `environment.yaml`. In addition, three folders will be created: `data`, `demo` and `scripts`. 
+This will create three files: `Snakefile`, `config.yaml` and `environment.yaml`. In addition, three folders will be created: `data`, `demo` and `scripts`.
 
 ## Creating an environment with the required software
 
 Assuming that you have a 64-bit system, on Linux, download and install Miniconda 3 with:
 
-```markdown
-$ curl -L https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh -o Mambaforge-Linux-x86_64.sh
-$ bash Mambaforge-Linux-x86_64.sh
+```bash
+curl -L https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh -o Mambaforge-Linux-x86_64.sh
+bash Mambaforge-Linux-x86_64.sh
 ```
 
 If you are asked the question
@@ -80,27 +86,39 @@ answer with **yes**. Along with a minimal Python 3 environment, Mambaforge conta
 
 First, make sure to activate the conda base environment with:
 
-`$ conda activate base`
+```bash
+conda activate base
+```
 
 The `environment.yaml` file that you have obtained with the previous step (Preparing a working directory) can be used to install all required software into an isolated Conda environment with the name `scIGD` via:
 
-`$ mamba env create --name scIGD --file environment.yaml`
+```bash
+mamba env create --name scIGD --file environment.yaml
+```
 
 Written in C++, [Mamba](https://github.com/mamba-org/mamba) is a faster and more robust reimplementation of [Conda](https://docs.conda.io/en/latest/).
 
 Once the environment has been created, activate it by executing: 
 
-`$ conda activate scIGD`
+```bash
+conda activate scIGD
+```
 
 and deactivate it by executing: 
 
-`$ conda deactivate`
+```bash
+conda deactivate
+```
 
 (but don't do this if you want to run the workflow now)
 
 # Input data
 
-Upon preparation of the working directory, two essential folders were generated: `data` and `scripts`.
+Upon preparation of the working directory, two essential folders were generated: `data` and `scripts` (Figure 2).
+
+![alt text here](./img/folder_structure.png)
+
+**Figure 2:** Overview of the folder strcutre.
 
 The `scripts` directory houses essential scripts integral to the workflow's execution, requiring no user intervention.
 
@@ -156,7 +174,9 @@ In addition, ensure all paths are specified relative to the directory containing
 
 Begin by confirming that you are in the directory containing the `Snakefile`. Once confirmed, you only need to execute the following command:
 
-`snakemake --resources mem_gb=<your_memory_allocation> --cores <your_core_count> all`
+```bash
+snakemake --resources mem_gb=<your_memory_allocation> --cores <your_core_count> all
+```
 
 Replace `<your_memory_allocation>` with the desired memory allocation value, and `<your_core_count>` with the desired number of CPU cores for parallel execution of the workflow. This flexibility allows you to tailor the resource allocation based on your system's capabilities and requirements. We recommend allocating a *minimum* of 12 GB of memory and utilizing 12 CPU cores for optimal performance.
 
