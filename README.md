@@ -29,8 +29,6 @@ The workflow is organized into three distinct stages, each addressing specific o
    - The final stage involves the quantification of genes and typed alleles. *[Kallisto](https://www.kallistobus.tools/)*, an alignment-free tool for rapid transcript quantification, is utilized with the newly built donor-specific reference generated in the previous stage. 
    
    - The resulting output is a count matrix, which provides expression levels for both genes and specifically typed alleles, enabling downstream analysis and exploration of gene and allele expression patterns.
-   
-   - To harness the full analytical potential of the results, we have created an `R` package, *[SingleCellAlleleExperiment](https://github.com/AGImkeller/SingleCellAlleleExperiment)*. This package provides a comprehensive multi-layer data structure, enabling the representation of immune genes at various levels, including alleles, genes, and functional aspects.
 
 This workflow is designed to support both *10x* and *BD Rhapsody* data, encompassing amplicon/targeted sequencing as well as whole-transcriptome-based data, providing flexibility to users working with different experimental setups.
 
@@ -205,6 +203,8 @@ In addition, the output includes a lookup table (`lookup_table_HLA.csv`) to faci
 Example datasets and outputs are available in our data package hosted on `ExperimentHub`: *[scaeData](https://github.com/AGImkeller/scaeData)*.
 
 To facilitate the analysis of this output, we offer a structured data representation in the form of an `R` package named *[SingleCellAlleleExperiment](https://github.com/AGImkeller/SingleCellAlleleExperiment)*. For detailed instructions on utilizing this package, please refer to its documentation.
+
+To harness the full analytical potential of the results, we have created an `R` package, *[SingleCellAlleleExperiment](https://github.com/AGImkeller/SingleCellAlleleExperiment)*. This package provides a comprehensive multi-layer data structure, enabling the representation of immune genes at various levels, including alleles, genes, and functional aspects.
 
 # References
 
