@@ -6,6 +6,8 @@
 wta:
 multiplex:
 
+output:
+
 threads_number:
 sequencing_technology:
 genes_to_be_allele_typed: # a list

@@ -3,9 +3,14 @@
 fastq="$1"
 seq="$2"
 num_processes="$3"
+output_dir="$4"
 
-ls "$fastq"/*.R2.fastq.gz | xargs -I {} -P "$num_processes" sh -c 'file="{}"
-    output_file="data/allele_typing/alleles/alleles_$(basename {} .R2.fastq.gz).txt"
+ls "$fastq"/*_R2.fastq.gz | xargs -I {} -P "$num_processes" sh -c '
+    file="{}"
+    output_dir="$1"
+    seq="$2"
+    
+    output_file="$output_dir/alleles_$(basename {} _R2.fastq.gz).txt"
     while IFS= read -r header; do
 
         read -r sequence
@@ -37,5 +42,5 @@ ls "$fastq"/*.R2.fastq.gz | xargs -I {} -P "$num_processes" sh -c 'file="{}"
         echo "$typed_allele" >> "$output_file"
         echo "----------------------" >> "$output_file"
 
-    done < data/allele_typing/short_seq.fasta
-'
+    done < "$seq"
+' _ "$output_dir" "$seq"
