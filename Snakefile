@@ -1,10 +1,13 @@
 ## configuration file
 configfile: 'config.yaml'
 
-## run all analyses
+## output directory
+outputDir=config['output']
+
+## running entire workflow
 rule all:
     input:
-        "data/quant/kb_output_amplicon" if not config['wta'] else "data/quant/kb_output_WTA"
+        os.path.join(outputDir, "quant", "kb_output")
 
 ## ------------------------------------------------------------------------------------ ##
 ## demultiplexing, if needed
@@ -16,22 +19,22 @@ if config['multiplex']:
         input: 
             fasta=config['sample_tag_seqs']
         output:
-            tsv="data/demultiplex/meta/sample_tag.tsv"
+            tsv=os.path.join(outputDir, "demultiplex", "meta", "sample_tag.tsv")
         log:
-            "logs/sample_tag_prep.log"
+            os.path.join(outputDir, "demultiplex", "logs", "sample_tag_prep.log")
         script:
             "scripts/1_sample_tag_prep.R"
 
     ## building a sample tag index
     rule sample_tag_index:
         input:
-            tsv="data/demultiplex/meta/sample_tag.tsv"
+            tsv=os.path.join(outputDir, "demultiplex", "meta", "sample_tag.tsv")
         output:
-            index="data/demultiplex/meta/st_index.idx",
-            fasta="data/demultiplex/meta/st_mismatch.fa",
-            t2g="data/demultiplex/meta/st_f2g.txt"
+            index=os.path.join(outputDir, "demultiplex", "meta", "st_index.idx"),
+            fasta=os.path.join(outputDir, "demultiplex", "meta", "st_mismatch.fa"),
+            t2g=os.path.join(outputDir, "demultiplex", "meta", "st_f2g.txt")
         log:
-            "logs/sample_tag_index.log"
+            os.path.join(outputDir, "demultiplex", "logs", "sample_tag_index.log")
         shell:
             "kb ref -i {output.index} -f1 {output.fasta} -g {output.t2g} --workflow kite {input.tsv} > {log} 2>&1"
 
@@ -39,28 +42,25 @@ if config['multiplex']:
     rule sample_tag_quant:
         input:
             raw_data_fastq_list=config['raw_data_fastq_list'][0:2],
-            index="data/demultiplex/meta/st_index.idx",
-            t2g="data/demultiplex/meta/st_f2g.txt"
+            index=os.path.join(outputDir, "demultiplex", "meta", "st_index.idx"),
+            t2g=os.path.join(outputDir, "demultiplex", "meta", "st_f2g.txt")
         output:
-            directory("data/demultiplex/quant")
+            directory(os.path.join(outputDir, "demultiplex", "matrix"))
         params:
             tech=config['sequencing_technology']
         log:
-            "logs/sample_tag_quant.log"
-        resources:
-            mem_gb=8,
-            cores=4
+            os.path.join(outputDir, "demultiplex", "logs", "sample_tag_quant.log")
         shell:
             "kb count -i {input.index} -g {input.t2g} -x {params.tech} -o {output} --workflow kite {input.raw_data_fastq_list} > {log} 2>&1"
 
     ## dataframe 1: cellular barcode + sample tag
     rule sample_tag_ident:
         input:
-            dir="data/demultiplex/quant"
+            dir=os.path.join(outputDir, "demultiplex", "matrix")
         output:
-            df1=temp("data/demultiplex/splitting/df1.txt")
+            df1=temp(os.path.join(outputDir, "demultiplex", "splitting", "df1.txt"))
         log:
-            "logs/sample_tag_ident.log"
+            os.path.join(outputDir, "demultiplex", "logs", "sample_tag_ident.log")
         script:
             "scripts/2_sample_tag_ident.R"
 
@@ -69,13 +69,12 @@ if config['multiplex']:
         input:
             fastq1=config['raw_data_fastq_list'][0]
         output:
-            cb=temp("data/demultiplex/splitting/cb.txt"),
-            id=temp("data/demultiplex/splitting/id.txt")
+            cb=temp(os.path.join(outputDir, "demultiplex", "splitting", "cb.txt")),
+            id=temp(os.path.join(outputDir, "demultiplex", "splitting", "id.txt"))
         params: 
-            read_len=config['read_bp_length']
+            read_len=config['read_length']
         log:
-            "logs/sample_tag_id.log"
-        threads: 8
+            os.path.join(outputDir, "demultiplex", "logs", "sample_tag_id.log")
         run:
             shell(
                 """
@@ -87,26 +86,25 @@ if config['multiplex']:
     ## dataframe 2: cellular barcode + ID
     rule sample_tag_id2:
         input:
-            cb="data/demultiplex/splitting/cb.txt",
-            id="data/demultiplex/splitting/id.txt"
+            cb=os.path.join(outputDir, "demultiplex", "splitting", "cb.txt"),
+            id=os.path.join(outputDir, "demultiplex", "splitting", "id.txt")
         output:
-            df2=temp("data/demultiplex/splitting/df2.txt")
+            df2=temp(os.path.join(outputDir, "demultiplex", "splitting", "df2.txt"))
         log:
-            "logs/sample_tag_id2.log"
+            os.path.join(outputDir, "demultiplex", "logs", "sample_tag_id2.log")
         shell:
             "paste -d '\t' {input.cb} {input.id} > {output.df2}"
 
     ## sorting both dataframes
     rule sample_tag_sort:
         input:
-            df1="data/demultiplex/splitting/df1.txt",
-            df2="data/demultiplex/splitting/df2.txt"
+            df1=os.path.join(outputDir, "demultiplex", "splitting", "df1.txt"),
+            df2=os.path.join(outputDir, "demultiplex", "splitting", "df2.txt")
         output:
-            df1_sorted=temp("data/demultiplex/splitting/df1_sorted.txt"),
-            df2_sorted=temp("data/demultiplex/splitting/df2_sorted.txt")
+            df1_sorted=temp(os.path.join(outputDir, "demultiplex", "splitting", "df1_sorted.txt")),
+            df2_sorted=temp(os.path.join(outputDir, "demultiplex", "splitting", "df2_sorted.txt"))
         log:
-            "logs/sample_tag_sort.log"
-        threads: 8
+            os.path.join(outputDir, "demultiplex", "logs", "sample_tag_sort.log")
         run:
             shell(
                 """
@@ -118,26 +116,26 @@ if config['multiplex']:
     ## joining both dataframes --> dataframe: ceullar barcode + sample tag + ID
     rule sample_tag_join:
         input:
-            df1_sorted="data/demultiplex/splitting/df1_sorted.txt",
-            df2_sorted="data/demultiplex/splitting/df2_sorted.txt"
+            df1_sorted=os.path.join(outputDir, "demultiplex", "splitting", "df1_sorted.txt"),
+            df2_sorted=os.path.join(outputDir, "demultiplex", "splitting", "df2_sorted.txt")
         output:
-            df=temp("data/demultiplex/splitting/df.txt")
+            df=temp(os.path.join(outputDir, "demultiplex", "splitting", "df.txt"))
         log:
-            "logs/sample_tag_join.log"
+            os.path.join(outputDir, "demultiplex", "logs", "sample_tag_join.log")
         shell:
             "join -t $'\t' -1 1 -2 1 {input.df2_sorted} {input.df1_sorted} > {output.df}"
 
     ## creating as many dataframes as sample tags; each dataframe contains IDs that belong to one specific sample tag
     rule sample_tag_df:
         input:
-            "data/demultiplex/splitting/df.txt"
+            os.path.join(outputDir, "demultiplex", "splitting", "df.txt")
         output:
-            directory("data/demultiplex/splitting/df")
+            directory(os.path.join(outputDir, "demultiplex", "splitting", "df"))
         run:
             shell(
                 """
-                mkdir data/demultiplex/splitting/df
-                awk -F' ' '{{ print $2 >> ("data/demultiplex/splitting/df/" $3 "_df.txt") }}' {input}
+                mkdir -p {output}
+                awk -F' ' '{{ print $2 >> ("{output}/" $3 "_df.txt") }}' {input}
                 """
             )
 
@@ -145,16 +143,16 @@ if config['multiplex']:
     rule fastq_split:
         input: 
             fastq=config['raw_data_fastq_list'][1],
-            df="data/demultiplex/splitting/df"
+            df=os.path.join(outputDir, "demultiplex", "splitting", "df")
         output:
-            directory("data/demultiplex/splitting/fastq")
+            directory(os.path.join(outputDir, "demultiplex", "splitting", "fastq"))
         params: 
             threads_number = config['threads_number']
         run:
             shell(
                 """
-                mkdir data/demultiplex/splitting/fastq
-                ls {input.df}/*_df.txt | xargs -I {{}} -P {params.threads_number} sh -c 'file="{{}}"; basefile=$(basename "$file"); seqtk subseq {input.fastq} "$file" | gzip > data/demultiplex/splitting/fastq/"${{basefile%_*}}.R2.fastq.gz"'
+                mkdir -p {output}
+                ls {input.df}/*_df.txt | xargs -I {{}} -P {params.threads_number} sh -c 'file="{{}}"; basefile=$(basename "$file"); seqtk subseq {input.fastq} "$file" | gzip > {output}/"${{basefile%_*}}_R2.fastq.gz"'
                 """
             )
 
@@ -171,18 +169,22 @@ if not config['wta']:
         input:
             original_fasta=config['amplicon_cDNA_fasta']
         output:
-            updated_cDNA="data/allele_typing/cDNA.fasta"
+            updated_cDNA=os.path.join(outputDir, "allele_typing", "cDNA.fasta")
+        log:
+            os.path.join(outputDir, "allele_typing", "logs", "change_headers.log")
         shell:
             "cat {input} | sed 's/location.*AMPLICON//' > {output}"
 
     ## trimming sequences on which allele-typing will be performed to 15bp
     rule extract_sequences: 
         input:
-            cdna_fasta="data/allele_typing/cDNA.fasta"
+            cdna_fasta=os.path.join(outputDir, "allele_typing", "cDNA.fasta")
         output:
-            short_seq="data/allele_typing/short_seq.fasta"
+            short_seq=os.path.join(outputDir, "allele_typing", "short_seq.fasta")
         params:
             genes=config['genes_to_be_allele_typed']
+        log:
+            os.path.join(outputDir, "allele_typing", "logs", "extract_sequences.log")
         run:
             shell(
                 """
@@ -193,22 +195,25 @@ if not config['wta']:
                 echo "$seq_data" | awk '/^>/ {{ header=$0; getline; sequence=substr($0, 1, 15); print header"\\n"sequence }}' > {output.short_seq}
                 """
             )
+            
     ## performing allele-typing
     rule allele_typing:
         input:
-            fastq=lambda wildcards: "data/demultiplex/splitting/fastq" if config['multiplex'] else "data/raw",
-            short_seq="data/allele_typing/short_seq.fasta",
+            fastq=lambda wildcards: os.path.join(outputDir, "demultiplex", "splitting", "fastq") if config['multiplex'] else os.path.dirname(config['raw_data_fastq_list'][0]),
+            short_seq=os.path.join(outputDir, "allele_typing", "short_seq.fasta"),
             script="scripts/3_allele_typing.sh"
         output:
-            directory("data/allele_typing/alleles")
+            directory(os.path.join(outputDir, "allele_typing", "alleles"))
         params:
             threads_number=config['threads_number']
+        log:
+            os.path.join(outputDir, "allele_typing", "logs", "allele_typing.log")
         run:
             shell(
                 """
-                mkdir data/allele_typing/alleles
+                mkdir -p {output}
                 chmod +x {input.script}
-                ./{input.script} {input.fastq} {input.short_seq} {params.threads_number}
+                ./{input.script} {input.fastq} {input.short_seq} {params.threads_number} {output}
                 """
             )
 
@@ -218,31 +223,35 @@ if not config['wta']:
     ## adding the typed-allele sequences into our final cDNA file
     rule final_cDNA_fasta:
         input:
-            alleles_dir="data/allele_typing/alleles",
-            genes_cDNA="data/allele_typing/cDNA.fasta",
+            alleles_dir=os.path.join(outputDir, "allele_typing", "alleles"),
+            genes_cDNA=os.path.join(outputDir, "allele_typing", "cDNA.fasta"),
             script="scripts/4_final_cDNA_amplicon.sh"
         output:
-            cDNA="data/quant/cDNA.fasta",
-            lookup_table="data/quant/lookup_table_HLA.csv"
+            cDNA=os.path.join(outputDir, "quant", "cDNA.fasta"),
+            lookup_table=os.path.join(outputDir, "quant", "lookup_table_HLA.csv")
         params:
             genes=config['genes_to_be_allele_typed']
+        log:
+            os.path.join(outputDir, "quant", "logs", "final_cDNA_fasta.log")
         run:
             shell(
                 """
                 toremove=({params.genes})
-                printf ">%s\n" "${{toremove[@]}}" | tr -d ',' > data/quant/toremove.txt
+                printf ">%s\n" "${{toremove[@]}}" | tr -d ',' > data/toremove.txt
                 chmod +x {input.script}
-                ./{input.script} {input.alleles_dir} data/quant/toremove.txt {input.genes_cDNA} {output.cDNA} {output.lookup_table}
-                rm data/quant/toremove.txt
+                ./{input.script} {input.alleles_dir} data/toremove.txt {input.genes_cDNA} {output.cDNA} {output.lookup_table}
+                rm data/toremove.txt
                 """
             )
 
     ## creating a transcript to gene txt file
     rule create_t2g: 
         input:
-            cDNA="data/quant/cDNA.fasta"
+            cDNA=os.path.join(outputDir, "quant", "cDNA.fasta")
         output:
-            t2g="data/quant/t2g.txt"
+            t2g=os.path.join(outputDir, "quant", "t2g.txt")
+        log:
+            os.path.join(outputDir, "quant", "logs", "create_t2g.log")
         run:
             shell(
                 """
@@ -255,31 +264,32 @@ if not config['wta']:
     ## creating cDNA index
     rule create_index:
         input:
-            cDNA="data/quant/cDNA.fasta"
+            cDNA=os.path.join(outputDir, "quant", "cDNA.fasta")
         output:
-            index="data/quant/index.idx"
+            index=os.path.join(outputDir, "quant", "index.idx")
+        log:
+            os.path.join(outputDir, "quant", "logs", "create_index.log")
         shell:
             "kallisto index -i {output.index} {input.cDNA}"
     
     ## quantification using kallisto
     rule quantification:
         input:
-            index="data/quant/index.idx",
-            t2g="data/quant/t2g.txt",
-            raw_data_fastq_list=config['raw_data_fastq_list']
+            index=os.path.join(outputDir, "quant", "index.idx"),
+            t2g=os.path.join(outputDir, "quant", "t2g.txt"),
+            raw_data_fastq_list=config['raw_data_fastq_list'],
+            lookup_old=os.path.join(outputDir, "quant", "lookup_table_HLA.csv")
         output:
-            directory("data/quant/kb_output_amplicon")
+            kb_dir=directory(os.path.join(outputDir, "quant", "kb_output")),
+            lookup_new=os.path.join(outputDir, "quant", "kb_output", "counts_unfiltered", "lookup_table_HLA.csv")
         params:
             tech=config['sequencing_technology']
         log:
-            "logs/quantification.log"
-        resources:
-            mem_gb=8,
-            cores=8
+            os.path.join(outputDir, "quant", "logs", "quantification.log")
         shell:
             """  
-            kb count -i {input.index} -g {input.t2g} -x {params.tech} -o {output} --mm --verbose {input.raw_data_fastq_list} > {log} 2>&1
-            mv data/quant/lookup_table_HLA.csv data/quant/kb_output_amplicon/counts_unfiltered/
+            kb count -i {input.index} -g {input.t2g} -x {params.tech} -o {output.kb_dir} --mm --verbose {input.raw_data_fastq_list} > {log} 2>&1
+            mv {input.lookup_old} {output.lookup_new}
             """
 
 ## ------------------------------------------------------------------------------------ ##
@@ -290,19 +300,24 @@ if config['wta']:
     ## ------------------------------------------------------------------------------------ ##
     ## allele-typing
     ## ------------------------------------------------------------------------------------ ##
-    ## unzipping reference and gtf files
+    ## unzipping reference and gtf files as well as HLA reference fasta file
     rule gunzip:
         input:
             fasta=config['reference_genome_fasta'],
-            gtf=config['reference_genome_gtf']
+            gtf=config['reference_genome_gtf'],
+            hla_ref="data/meta/hla_gen.fasta.gz"
         output:
             fasta="data/meta/dna.primary_assembly.fa",
-            gtf="data/meta/gtf.gtf"
+            gtf="data/meta/gtf.gtf",
+            hla_ref="data/meta/hla_gen.fasta"
+        log:
+            os.path.join(outputDir, "allele_typing", "logs", "gunzip.log")
         run:
             shell(
                 """
                 gunzip -c {input.fasta} > {output.fasta}
                 gunzip -c {input.gtf} > {output.gtf}
+                gunzip -c {input.hla_ref} > {output.hla_ref}
                 """
             )
 
@@ -312,58 +327,63 @@ if config['wta']:
             fasta="data/meta/dna.primary_assembly.fa",
             gtf="data/meta/gtf.gtf"
         output:
-            genome_dir=directory("data/allele_typing/GenomeDir")
+            genome_dir=directory(os.path.join(outputDir, "allele_typing", "GenomeDir"))
         params: 
             threads_number=config['threads_number']
+        log:
+            os.path.join(outputDir, "allele_typing", "logs", "genome_generation.log")
         shell:
             "STAR --runMode genomeGenerate --genomeDir {output.genome_dir} --runThreadN {params.threads_number} --genomeSAindexNbases 14 --genomeFastaFiles {input.fasta} --sjdbGTFfile {input.gtf}"
 
     ## STAR alignment
     rule read_alignment:
         input:
-            fastq=lambda wildcards: "data/demultiplex/splitting/fastq/*"[:2] if config['multiplex'] else config['raw_data_fastq_list'][:2],
-            genome_dir="data/allele_typing/GenomeDir"
+            fastq=lambda wildcards: os.path.join(outputDir, "demultiplex", "splitting", "fastq") if config['multiplex'] else config['raw_data_fastq_list'][:2],
+            genome_dir=os.path.join(outputDir, "allele_typing", "GenomeDir")
         output:
-            star=temp("data/allele_typing/STAR_alignment/Aligned.out.bam")
+            star=temp(os.path.join(outputDir, "allele_typing", "STAR_alignment", "Aligned.out.bam"))
         params:
-            threads_number=config['threads_number']
+            threads_number=config['threads_number'],
+            output_prefix=os.path.join(outputDir, "allele_typing", "STAR_alignment/")
+        log:
+            os.path.join(outputDir, "allele_typing", "logs", "read_alignment.log")
         shell:
-            "STAR --outFilterScoreMinOverLread 0.3 --outFilterMatchNminOverLread 0.3 --outSAMtype BAM Unsorted --runThreadN {params.threads_number} --genomeDir {input.genome_dir} --readFilesCommand zcat --readFilesIn {input.fastq} --outFileNamePrefix data/allele_typing/STAR_alignment/"
+            "STAR --outFilterScoreMinOverLread 0.3 --outFilterMatchNminOverLread 0.3 --outSAMtype BAM Unsorted --runThreadN {params.threads_number} --genomeDir {input.genome_dir} --readFilesCommand zcat --readFilesIn {input.fastq} --outFileNamePrefix {params.output_prefix}"
 
     ## sorting BAM file
     rule bam_sort: 
         input:
-            bam="data/allele_typing/STAR_alignment/Aligned.out.bam"
+            bam=os.path.join(outputDir, "allele_typing", "STAR_alignment", "Aligned.out.bam")
         output:
-            sorted_bam="data/allele_typing/STAR_alignment/Aligned.out.sorted.bam"
-        resources:
-            mem_gb=8,
-            cores=8
+            sorted_bam=os.path.join(outputDir, "allele_typing", "STAR_alignment", "Aligned.out.sorted.bam")
+        log:
+            os.path.join(outputDir, "allele_typing", "logs", "bam_sort.log")
         shell:
             "samtools sort {input.bam} -o {output.sorted_bam}"
 
     ## indexing BAM file
     rule bam_index:
         input:
-            sorted_bam="data/allele_typing/STAR_alignment/Aligned.out.sorted.bam"
+            sorted_bam=os.path.join(outputDir, "allele_typing", "STAR_alignment", "Aligned.out.sorted.bam")
         output:
-            bam_index="data/allele_typing/STAR_alignment/Aligned.out.sorted.bam.bai"
-        resources:
-            mem_gb=4,
-            cores=4
+            bam_index=os.path.join(outputDir, "allele_typing", "STAR_alignment", "Aligned.out.sorted.bam.bai")
+        log:
+            os.path.join(outputDir, "allele_typing", "logs", "bam_index.log")
         shell:
             "samtools index {input.sorted_bam}"
 
     ## extracting reads mapping to chromosome 6
     rule reads_extract:
         input:
-            bam="data/allele_typing/STAR_alignment/Aligned.out.sorted.bam",
-            bam_index="data/allele_typing/STAR_alignment/Aligned.out.sorted.bam.bai"
+            bam=os.path.join(outputDir, "allele_typing", "STAR_alignment", "Aligned.out.sorted.bam"),
+            bam_index=os.path.join(outputDir, "allele_typing", "STAR_alignment", "Aligned.out.sorted.bam.bai")
         output:
-            arcasHLA=directory("data/allele_typing/output")
+            arcasHLA=directory(os.path.join(outputDir, "allele_typing", "arcasHLA_fastq"))
         params:
-            is_single=config['single_end_samples'],
+            is_single=config['single_end_sequencing'],
             threads_number=config['threads_number']
+        log:
+            os.path.join(outputDir, "allele_typing", "logs", "reads_extract.log")
         run:
             shell("arcasHLA reference --version 3.9.0 -v")
             if str(params.is_single).lower() == 'true':
@@ -374,38 +394,43 @@ if config['wta']:
     ## performing allele-typing
     rule allele_typing:
         input:
-            chr6_fastq="data/allele_typing/output/"
+            chr6_fastq=os.path.join(outputDir, "allele_typing", "arcasHLA_fastq")
         output:
-            arcasHLA="data/allele_typing/alleles/Aligned.genotype.json"
+            arcasHLA=os.path.join(outputDir, "allele_typing", "arcasHLA_alleles", "Aligned.genotype.json")
         params:
             genes_to_be_allele_typed=config['genes_to_be_allele_typed'],
-            is_single=config['single_end_samples'],
-            threads_number=config['threads_number']
+            is_single=config['single_end_sequencing'],
+            threads_number=config['threads_number'],
+            alleles_dir=os.path.join(outputDir, "allele_typing", "arcasHLA_alleles")
+        log:
+            os.path.join(outputDir, "allele_typing", "logs", "allele_typing.log")
         run:
             if str(params.is_single).lower() == 'true':
                 shell(
                     """
                     genes=$(echo {params.genes_to_be_allele_typed} | sed 's/HLA-//g; s/ /,/g')
-                    arcasHLA genotype {input.chr6_fastq}/*.fq.gz -o data/allele_typing/alleles/ -g "$genes" -t {params.threads_number} -v --single
+                    arcasHLA genotype {input.chr6_fastq}/*.fq.gz -o {params.alleles_dir} -g "$genes" -t {params.threads_number} -v --single
                     """
                 )
             if str(params.is_single).lower() == 'false':
                 shell(
                     """
                     genes=$(echo {params.genes_to_be_allele_typed} | sed 's/HLA-//g; s/ /,/g')
-                    arcasHLA genotype {input.chr6_fastq}/*.fq.gz -o data/allele_typing/alleles/ -g "$genes" -t {params.threads_number} -v
+                    arcasHLA genotype {input.chr6_fastq}/*.fq.gz -o {params.alleles_dir} -g "$genes" -t {params.threads_number} -v
                     """
                 )
 
     ## changing allele headers
     rule allele_headers:
         input:
-            genotype="data/allele_typing/alleles/Aligned.genotype.json",
+            genotype=os.path.join(outputDir, "allele_typing", "arcasHLA_alleles", "Aligned.genotype.json"),
             allelelist="data/meta/Allelelist.txt",
             cdna="data/meta/hla_gen.fasta",
             script="scripts/5_allele_headers.sh"
         output:
-            allele_headers=temp("data/matching_headers.txt")
+            allele_headers=temp(os.path.join(outputDir, "allele_typing", "matching_headers.txt"))
+        log:
+            os.path.join(outputDir, "allele_typing", "logs", "allele_headers.log")
         run:
             shell(
                 """
@@ -417,11 +442,13 @@ if config['wta']:
     ## creating a cDNA file from the typed-allele sequences
     rule allele_fasta:
         input:
-            allele_headers="data/matching_headers.txt",
+            allele_headers=os.path.join(outputDir, "allele_typing", "matching_headers.txt"),
             cdna="data/meta/hla_gen.fasta"
         output:
-            allele_cdna="data/allele_typing/allele_cDNA.fasta",
-            lookup_table="data/allele_typing/lookup_table_HLA.csv"
+            allele_cdna=os.path.join(outputDir, "allele_typing", "allele_cDNA.fasta"),
+            lookup_table=os.path.join(outputDir, "allele_typing", "lookup_table_HLA.csv")
+        log:
+            os.path.join(outputDir, "allele_typing", "logs", "allele_fasta.log")
         shell:
             """
             awk 'NR==FNR{{a[">"$0];next}} /^>/{{f=$0 in a}} f' {input.allele_headers} {input.cdna} > {output.allele_cdna}
@@ -437,30 +464,28 @@ if config['wta']:
             fasta=config['reference_genome_fasta'],
             gtf=config['reference_genome_gtf']
         output:
-            index="data/quant/meta/ref_index.idx",
-            t2g="data/quant/meta/ref_t2g.txt",
-            fasta=temp("data/quant/genes_cDNA.fa")
-        resources:
-            mem_gb=8,
-            cores=8
+            index=os.path.join(outputDir, "quant", "meta", "ref_index.idx"),
+            t2g=os.path.join(outputDir, "quant", "meta", "t2g.txt"),
+            fasta=temp(os.path.join(outputDir, "quant", "genes_cDNA.fa"))
+        log:
+            os.path.join(outputDir, "quant", "logs", "ref_cDNA_fasta.log")
         shell:
             "kb ref -i {output.index} -g {output.t2g} -f1 {output.fasta} {input.fasta} {input.gtf}"
 
     rule final_cDNA_fasta:
         input:
-            allele_cDNA="data/allele_typing/allele_cDNA.fasta",
-            genes_cDNA="data/quant/genes_cDNA.fa",
+            allele_cDNA=os.path.join(outputDir, "allele_typing", "allele_cDNA.fasta"),
+            genes_cDNA=os.path.join(outputDir, "quant", "genes_cDNA.fa"),
             script="scripts/6_final_cDNA_wta.sh"
         output:
-            cDNA="data/quant/cDNA.fasta",
+            cDNA=os.path.join(outputDir, "quant", "cDNA.fa")
         params:
             genes=config['genes_to_be_allele_typed']
-        resources:
-            cores=4
+        log:
+            os.path.join(outputDir, "quant", "logs", "final_cDNA_fasta.log")
         run:
             shell(
                 """
-                rm -r data/quant/meta
                 genes=$(echo {params.genes} | sed 's/ /|/g')
                 chmod +x {input.script}
                 ./{input.script} {input.allele_cDNA} {input.genes_cDNA} "$genes" {output.cDNA}
@@ -469,9 +494,11 @@ if config['wta']:
 
     rule create_t2g: 
         input:
-            cDNA="data/quant/cDNA.fasta"
+            cDNA=os.path.join(outputDir, "quant", "cDNA.fa")
         output:
-            t2g="data/quant/t2g.txt"
+            t2g=os.path.join(outputDir, "quant", "t2g.txt")
+        log:
+            os.path.join(outputDir, "quant", "logs", "create_t2g.log")
         shell:
             """
             grep "^>" {input.cDNA} | sed 's/^.//' | tr " " "\t" > {output.t2g}
@@ -479,33 +506,33 @@ if config['wta']:
 
     rule create_index:
         input:
-            cDNA="data/quant/cDNA.fasta"
+            cDNA=os.path.join(outputDir, "quant", "cDNA.fa")
         output:
-            index="data/quant/index.idx"
-        resources:
-            cores=4
+            index=os.path.join(outputDir, "quant", "index.idx")
+        log:
+            os.path.join(outputDir, "quant", "logs", "create_index.log")
         shell:
             "kallisto index -i {output.index} {input.cDNA}"
 
     ## quantification using kallisto
+    ## quantification using kallisto
     rule quantification:
         input:
-            index="data/quant/index.idx",
-            t2g="data/quant/t2g.txt",
-            raw_data_fastq_list=config['raw_data_fastq_list']
+            index=os.path.join(outputDir, "quant", "index.idx"),
+            t2g=os.path.join(outputDir, "quant", "t2g.txt"),
+            raw_data_fastq_list=config['raw_data_fastq_list'],
+            lookup_old=os.path.join(outputDir, "allele_typing", "lookup_table_HLA.csv")
         output:
-            directory("data/quant/kb_output_WTA")
+            kb_dir=directory(os.path.join(outputDir, "quant", "kb_output")),
+            lookup_new=os.path.join(outputDir, "quant", "kb_output", "counts_unfiltered", "lookup_table_HLA.csv")
         params:
             tech=config['sequencing_technology']
         log:
-            "logs/quantification.log"
-        resources:
-            mem_gb=8,
-            cores=8
+            os.path.join(outputDir, "quant", "logs", "quantification.log")
         shell:
             """  
-            kb count -i {input.index} -g {input.t2g} -x {params.tech} -o {output} --mm --verbose {input.raw_data_fastq_list} > {log} 2>&1
-            mv data/allele_typing/lookup_table_HLA.csv data/quant/kb_output_WTA/counts_unfiltered/
+            kb count -i {input.index} -g {input.t2g} -x {params.tech} -o {output.kb_dir} --mm --verbose {input.raw_data_fastq_list} > {log} 2>&1
+            mv {input.lookup_old} {output.lookup_new}
             """
 
 ## ------------------------------------------------------------------------------------ ##
