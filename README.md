@@ -32,6 +32,8 @@ The workflow is organized into three distinct stages, each addressing specific o
 
 This workflow is designed to support both *10x* and *BD Rhapsody* data, encompassing amplicon/targeted sequencing as well as whole-transcriptome-based data, providing flexibility to users working with different experimental setups.
 
+To maximize the analytical potential of the results, we have created an `R/Bioconductor` package, *[SingleCellAlleleExperiment](https://bioconductor.org/packages/SingleCellAlleleExperiment)*. This package provides a comprehensive multi-layer data structure, enabling the representation of HLA genes at various levels, including alleles, genes, and functional classes.
+
 ![alt text here](./img/scIGD_SCAE_wokflow.png)
 
 **Figure 1:** Overview of the *scIGD* workflow for unraveling immunogenomic diversity in single-cell data, highlighting the integration of the *SingleCellAlleleExperiment* package for comprehensive data analysis.
@@ -120,53 +122,51 @@ Upon preparation of the working directory, two essential folders were generated:
 
 The `scripts` directory houses essential scripts integral to the workflow's execution, requiring no user intervention.
 
-On the other hand, the `data` directory serves as a space for user-provided data necessary for the workflow:
+On the other hand, the `data` directory serves as a space for metadata necessary for the workflow. Within its `meta` subfolder, two files are found. Both files are retrieved from the *IMGT/HLA* database and necessary for *arcasHLA* allele-typing:
 
-Within its `raw` subfolder, you can deposit raw files in the form of gzipped FASTQ files. To ensure compatibility, file names must adhere to the format `{dir_raw_fastq}/*.R{1/2}.fastq.gz`, concluding with `.R{1/2}.fastq.gz`.
+- `Allelelist.txt`: A CSV file listing all HLA alleles named at the time of the latest release.
 
-In the `meta` subfolder, you are required to supply the following:
+- `hla_gen.fasta.gz`: A FASTA file including the DNA sequence for all HLA alleles, which have genomic sequences available.
+
+In addition, users are required to supply the following files. Example files can be found in the `demo` folder:
 
 - `SampleTagSequences.fasta`: This is necessary **only if the data is multiplexed**. It should contain a FASTA file of sample tag sequences crucial for demultiplexing the data and generating donor-specific or sample-tag-specific FASTQ files.
 
-- `mRNAPanelRef.fasta`: Essential for **amplicon-based data**, this FASTA file comprises sequences needed for executing allele-typing procedures and quantification.
+- `mRNAPanelRef.fasta`: Essential for **amplicon-based data**, this FASTA file contains the panel reference used.
 
-- `dnaPrimaryAssembly.fa.gz` and `gtf.gz`: For **whole-transcriptome-based data**, you must provide a gzipped FASTA file of the reference (`dnaPrimaryAssembly.fa.gz`) and its corresponding gtf file (`gtf.gz`) to execute allele-typing procedures and quantification. These files can be obtained from [Ensembl](https://www.ensembl.org/index.html).
+- `Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz` and `Homo_sapiens.GRCh38.112.gtf.gz`: For **whole-transcriptome-based data**, you must provide a gzipped FASTA file of the reference and its corresponding gtf file. These files should be obtained from [Ensembl](https://www.ensembl.org/index.html): [Ref](https://ftp.ensembl.org/pub/release-112/fasta/homo_sapiens/dna/) and [GTF](https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/).
 
 # Configuration
 
-The configuration for this workflow is designed to offer flexibility and adaptability to different user requirements. Users can customize their parameters in a dedicated configuration file (`config.yaml`) to suit specific use case and control various aspects of the workflow. Below are the essential parameters available for configuration:
+The configuration for this workflow is designed to offer flexibility and adaptability to different user requirements. Users can customize their parameters in a dedicated configuration file (`config.yaml`) to suit specific use case and control various aspects of the workflow. Examples for populating these parameters are provided in the `config.yaml` file. Please ensure all paths defined in this configuration file are either absolute or relative to the location of the `Snakefile`!
+
+Below are the essential parameters available for configuration:
 
 - `wta`: Determines the experiment setup. Set to `true` for whole-transcriptome-based data, and `false` for amplicon-based data.
 
-- `multiplex`: Specifies the presence of multiple donors in a dataset. Set to `true` for multiplexed data, and `false` for datasets with a single donor. Currently, this feature only works for BD Rhapsody data.
+- `multiplex`: Specifies the presence of multiple donors or samples in a dataset. Set to `true` for multiplexed data, and `false` for datasets with a single donor. Currently, this feature only works for BD Rhapsody data.
 
-- `threads_number`: Set the desired number of threads or cores. For optimal performance, match this value with available computational resources.
+- `output`: Path to a folder that will store the output generated by the workflow.
 
-- `sequencing_technology`: Indicates the sequencing technology used, such as `10XV{1/2/3}` or `BDWTA`. To display the list of supported technologies, run `kb --list`.
+- `threads_number`: The maximal number of threads or cores to use for demultiplexing, STAR and arcasHLA.
 
-- `genes_to_be_allele_typed`: Provides a list of gene names for allele typing. This parameter specifically supports HLA genes and will be extended to include KIRs in future releases.
+- `sequencing_technology`: Indicates the sequencing technology used, possible options: 10XV1, 10XV2, 10XV3, BDWTA.
 
-- `raw_data_fastq_list`: Provides a list of paths to gzipped raw FASTQ files. Each file should adhere to the naming format: `{dir_raw_fastq}/*.R1.fastq.gz` for Read 1 and `{dir_raw_fastq}/*.R2.fastq.gz` for Read 2.
+- `genes_to_be_allele_typed`: Provides a list of genes on which allele-typing will be performed. This parameter specifically supports HLA genes and will be extended to include KIRs in future releases.
+
+- `raw_data_fastq_list`: Provides a list of paths to raw, gzipped FASTQ files. Each file should adhere to the naming format: `{dir_raw_fastq}/*_R1.fastq.gz` for Read 1 and `{dir_raw_fastq}/*_R2.fastq.gz` for Read 2.
 
 - `sample_tag_seqs`: Provides the path to a FASTA file containing sample tag sequences. This is applicable when the input data is multiplexed, and sample tags are used to differentiate between samples.
 
-- `read_bp_length`: Specifies the read length in base pairs. Set only if the input data is from amplicon-based sequencing.
+- `read_length`: Specifies the read length in R1 file in base pairs. Set only if the input data is multiplexed.
 
 - `amplicon_cDNA_fasta`: Provides the path to a FASTA file containing amplicon cDNA sequences. Set only for amplicon-based sequencing.
 
-- `single_end_samples`: Set to `true` for single-end reads and `false` for paired-end reads. Set only for whole-transcriptome-based data.
+- `single_end_sequencing`: Set to `true` for single-end sequencing and `false` for paired-end sequencing. Set only for whole-transcriptome-based data.
 
 - `reference_genome_gtf`: Provides the path to the GTF file with annotation information for the reference genome. Set for whole-transcriptome-based data.
 
 - `reference_genome_fasta`: Provides the path to the FASTA file containing the primary assembly of the reference genome. Set for whole-transcriptome-based data.
-
-Examples for populating these parameters are provided in the `demo/configDemo.yaml` file. 
-
-Please ensure you input your values directly into the `config.yaml` file.
-
-Remove rows associated with unused parameters to enhance clarity and precision in the configuration file.
-
-In addition, ensure all paths are specified relative to the directory containing the `Snakefile` to facilitate proper configuration.
 
 # Running the workflow
 
@@ -192,19 +192,17 @@ This workflow has been rigorously tested. Here, we report two distinct scenarios
    - 1 donor, 50 million reads in 1 FASTQ file
    - Completed in ~ 3 hours utilizing 32 CPU cores and 40 GB of memory
 
-When dealing with whole-transcriptome-based data, it is advisable to use the tool on a cluster. A Snakefile that was executed on a SLURM cluster can be found in `demo/SnakefileCluster`. It was run with the following parameters: `nodes=1`, `ntasks=1`, `cpus-per-task=40` and `mem-per-cpu=2000`.
+When dealing with whole-transcriptome-based data, it is advisable to use the tool on a cluster. A Snakefile that was executed on a SLURM cluster can be found in the `demo` folder. It was run with the following parameters: `nodes=1`, `ntasks=1`, `cpus-per-task=40` and `mem-per-cpu=2000`.
 
 # Output
 
-As a product of *kallisto*, the output comprises a count matrix (`cells_x_genes.mtx`), a feature list encompassing genes and typed-alleles (`cells_x_genes.genes.txt`), and a barcode list (`cells_x_genes.barcodes.txt`). The matrix serves as a rich source for downstream analysis and exploration, capturing the nuanced expression levels of genes and specifically typed alleles. 
+As a product of *kallisto*, the resulting output comprises a count matrix (`cells_x_genes.mtx`), a feature list encompassing genes and typed-alleles (`cells_x_genes.genes.txt`), and a barcode list (`cells_x_genes.barcodes.txt`). The matrix serves as a source for downstream analysis and exploration, capturing the expression levels of genes and specifically typed alleles.
 
 In addition, the output includes a lookup table (`lookup_table_HLA.csv`) to facilitate the creation of the relevant additional data layers during object generation for analysis.
 
-Example datasets and outputs are available in our data package hosted on `ExperimentHub`: *[scaeData](https://github.com/AGImkeller/scaeData)*.
+Example datasets and outputs are available in our data package hosted on Bioconductor's `ExperimentHub`: *[scaeData](https://bioconductor.org/packages/scaeData)*.
 
-To facilitate the analysis of this output, we offer a structured data representation in the form of an `R` package named *[SingleCellAlleleExperiment](https://github.com/AGImkeller/SingleCellAlleleExperiment)*. For detailed instructions on utilizing this package, please refer to its documentation.
-
-To harness the full analytical potential of the results, we have created an `R` package, *[SingleCellAlleleExperiment](https://github.com/AGImkeller/SingleCellAlleleExperiment)*. This package provides a comprehensive multi-layer data structure, enabling the representation of immune genes at various levels, including alleles, genes, and functional aspects.
+To facilitate the analysis of this output, we offer a structured data representation in the form of an `R/Bioconductor` package named *[SingleCellAlleleExperiment](https://bioconductor.org/packages/SingleCellAlleleExperiment)*. For detailed instructions on utilizing this package, please refer to its documentation.
 
 # References
 
@@ -247,6 +245,8 @@ To harness the full analytical potential of the results, we have created an `R` 
 - Ensembl: Martin F. *et al*, (2023). Nucleic Acids Research, 51, 933-941.
 
 ## Citation
+
+To be added...
 
 ## Authors
 
