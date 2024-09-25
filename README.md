@@ -118,7 +118,7 @@ conda deactivate
 
 # Input data
 
-Upon preparation of the working directory, two essential folders were generated: `data` and `scripts`.
+Upon preparation of the working directory, two essential folders were generated: `data` and `scripts` (refer to Figure 2).
 
 The `scripts` directory houses essential scripts integral to the workflow's execution, requiring no user intervention.
 
