@@ -181,7 +181,11 @@ if not config['wta']:
     ## ------------------------------------------------------------------------------------ ##
     ## allele-typing
     ## ------------------------------------------------------------------------------------ ##
-    ## changing cDNA headers
+    
+    ## changing cDNA sequence headers
+    ## an example cDNA FASTA file from BD Rhapsody is provided in the demo folder
+    ## the cDNA sequence headers are modified to facilitate the extraction of HLA sequences 
+    ## and to properly generate the t2g file required for running kallisto
     rule change_headers: 
         input:
             original_fasta=config['amplicon_cDNA_fasta']
@@ -193,6 +197,11 @@ if not config['wta']:
             "cat {input} | sed 's/location.*AMPLICON//' > {output}"
 
     ## trimming sequences on which allele-typing will be performed to 15bp
+    ## this specific length is sufficient to distinguish between different HLA genes
+    ## enabling precise allele-typing by capturing sequence variations such as mismatches or mutations
+    ## this shell command uses `awk` to extract sequences from the FASTA file 
+    ## whose headers match the HLA gene pattern given by the user
+    ## the sequences are then trimmed and saved in a new FASTA file for allele-typing
     rule extract_sequences: 
         input:
             cdna_fasta=os.path.join(outputDir, "allele_typing", "cDNA.fasta")
@@ -214,6 +223,7 @@ if not config['wta']:
             )
             
     ## performing allele-typing
+    ## refer to the shell script for documentation
     rule allele_typing:
         input:
             fastq=lambda wildcards: os.path.join(outputDir, "demultiplex", "splitting", "fastq") if config['multiplex'] else os.path.dirname(config['raw_data_fastq_list'][0]),
@@ -237,7 +247,12 @@ if not config['wta']:
     ## ------------------------------------------------------------------------------------ ##
     ## quantification
     ## ------------------------------------------------------------------------------------ ##
-    ## adding the typed-allele sequences into our final cDNA file
+   
+    ## combining typed-allele sequences into the final cDNA file
+    ## before adding the sequences of the HLA typed alleles into the original cDNA file for quantification
+    ## the HLA gene sequences already present must be removed
+    ## once the original HLA sequences are cleared
+    ## the newly typed allele sequences can be appended to the cDNA file
     rule final_cDNA_fasta:
         input:
             alleles_dir=os.path.join(outputDir, "allele_typing", "alleles"),
@@ -261,7 +276,8 @@ if not config['wta']:
                 """
             )
 
-    ## creating a transcript to gene txt file
+    ## creating a transcript to gene (t2g) txt file
+    ## this is necessary to run kallisto
     rule create_t2g: 
         input:
             cDNA=os.path.join(outputDir, "quant", "cDNA.fasta")
@@ -279,6 +295,7 @@ if not config['wta']:
             )
     
     ## creating cDNA index
+    ## this is necessary to run kallisto
     rule create_index:
         input:
             cDNA=os.path.join(outputDir, "quant", "cDNA.fasta")
@@ -317,6 +334,7 @@ if config['wta']:
     ## ------------------------------------------------------------------------------------ ##
     ## allele-typing
     ## ------------------------------------------------------------------------------------ ##
+    
     ## unzipping reference and gtf files as well as HLA reference fasta file
     rule gunzip:
         input:
@@ -475,6 +493,7 @@ if config['wta']:
     ## ------------------------------------------------------------------------------------ ##
     ## quantification
     ## ------------------------------------------------------------------------------------ ##
+    
     ## creating a transcript to gene txt file & cDNA index & final cDNA
     rule ref_cDNA_fasta:
         input:
@@ -531,7 +550,6 @@ if config['wta']:
         shell:
             "kallisto index -i {output.index} {input.cDNA}"
 
-    ## quantification using kallisto
     ## quantification using kallisto
     rule quantification:
         input:
