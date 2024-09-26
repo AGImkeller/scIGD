@@ -38,7 +38,7 @@ raw_data_fastq_list: ["data/raw/S1_L001_R1.fastq.gz", "data/raw/S1_L001_R2.fastq
 ## and multiplex: true.
 ##--------------------------------------------------------------------------------------------
 ## Path to a FASTA file containing sample tag sequences.
-sample_tag_seqs: "data/demo/SampleTagSequences_HomoSapiens_ver1.fasta"
+sample_tag_seqs: "demo/SampleTagSequences_HomoSapiens_ver1.fasta"
 
 ## Read length in R1 in bp
 read_length: "75"
@@ -48,7 +48,7 @@ read_length: "75"
 ## and wta: false.
 ##--------------------------------------------------------------------------------------------
 ## Path to the FASTA file containing amplicon cDNA sequences
-amplicon_cDNA_fasta: "data/demo/mRNAPanelRef.fasta"
+amplicon_cDNA_fasta: "demo/mRNAPanelRef.fasta"
 ##--------------------------------------------------------------------------------------------
 
 ## Only required when sequencing data is whole-transcriptome-based
