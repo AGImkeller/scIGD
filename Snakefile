@@ -239,7 +239,6 @@ if not config['wta']:
             shell(
                 """
                 mkdir -p {output}
-                chmod +x {input.script}
                 ./{input.script} {input.fastq} {input.short_seq} {params.threads_number} {output}
                 """
             )
@@ -250,7 +249,7 @@ if not config['wta']:
    
     ## combining typed-allele sequences into the final cDNA file
     ## before adding the sequences of the HLA typed alleles into the original cDNA file for quantification
-    ## the HLA gene sequences already present must be removed
+    ## the HLA sequences already present must be removed
     ## once the original HLA sequences are cleared
     ## the newly typed allele sequences can be appended to the cDNA file
     rule final_cDNA_fasta:
@@ -270,7 +269,6 @@ if not config['wta']:
                 """
                 toremove=({params.genes})
                 printf ">%s\n" "${{toremove[@]}}" | tr -d ',' > data/toremove.txt
-                chmod +x {input.script}
                 ./{input.script} {input.alleles_dir} data/toremove.txt {input.genes_cDNA} {output.cDNA} {output.lookup_table}
                 rm data/toremove.txt
                 """
@@ -307,6 +305,10 @@ if not config['wta']:
             "kallisto index -i {output.index} {input.cDNA}"
     
     ## quantification using kallisto
+    ## kallisto uses --mm (multi-mapping) parameter to 
+    ## i) enhance sensitivity in detecting HLA alleles
+    ## ii) enable better correlation with traditional quantification methods
+    ## this parameter does not affect non-HLA gene quantification
     rule quantification:
         input:
             index=os.path.join(outputDir, "quant", "index.idx"),
@@ -335,7 +337,16 @@ if config['wta']:
     ## allele-typing
     ## ------------------------------------------------------------------------------------ ##
     
-    ## unzipping reference and gtf files as well as HLA reference fasta file
+    ## the goal is to perform allele-typing on user-defined HLA genes
+    ## arcasHLA is the chosen tool, requiring a BAM file as input
+    ## therefore, STAR is used to index the ref genome and align the reads
+    ## producing a BAM file with aligned reads
+    ## arcasHLA first uses this BAM file to extract reads mapping to chromosome 6
+    ## note: HLA genes are encoded on chromosome 6
+    ## and then uses IMGT/HLA database and EM model to identify alleles
+    ## for each gene, the output is one or two alleles that best match the data
+
+    ## unzipping reference and gtf files as well as HLA reference FASTA file
     rule gunzip:
         input:
             fasta=config['reference_genome_fasta'],
@@ -371,6 +382,11 @@ if config['wta']:
             "STAR --runMode genomeGenerate --genomeDir {output.genome_dir} --runThreadN {params.threads_number} --genomeSAindexNbases 14 --genomeFastaFiles {input.fasta} --sjdbGTFfile {input.gtf}"
 
     ## STAR alignment
+    ## the shell command uses specific thresholds (30%)
+    ## these thresholds are common for scRNA-seq data
+    ## balancing between sensitivity and specificity
+    ## offering flexibility for short and noisy scRNA-seq reads
+    ## while avoiding overly strict filtering
     rule read_alignment:
         input:
             fastq=lambda wildcards: os.path.join(outputDir, "demultiplex", "splitting", "fastq") if config['multiplex'] else config['raw_data_fastq_list'][:2],
@@ -408,6 +424,8 @@ if config['wta']:
             "samtools index {input.sorted_bam}"
 
     ## extracting reads mapping to chromosome 6
+    ## note: HLA genes are encoded on chromosome 6
+    ## arcasHLA: step 1
     rule reads_extract:
         input:
             bam=os.path.join(outputDir, "allele_typing", "STAR_alignment", "Aligned.out.sorted.bam"),
@@ -426,7 +444,8 @@ if config['wta']:
             if str(params.is_single).lower() == 'false':
                 shell("arcasHLA extract {input.bam} -o {output.arcasHLA} -t {params.threads_number} -v")
 
-    ## performing allele-typing
+    ## performing HLA allele-typing
+    ## arcasHLA: step 2
     rule allele_typing:
         input:
             chr6_fastq=os.path.join(outputDir, "allele_typing", "arcasHLA_fastq")
@@ -456,6 +475,9 @@ if config['wta']:
                 )
 
     ## changing allele headers
+    ## arcasHLA reports alleles in JSON format
+    ## standardizing headers to match cDNA format for sequence extraction
+    ## enabling integration with reference cDNA file later
     rule allele_headers:
         input:
             genotype=os.path.join(outputDir, "allele_typing", "arcasHLA_alleles", "Aligned.genotype.json"),
@@ -466,15 +488,15 @@ if config['wta']:
             allele_headers=temp(os.path.join(outputDir, "allele_typing", "matching_headers.txt"))
         log:
             os.path.join(outputDir, "allele_typing", "logs", "allele_headers.log")
-        run:
-            shell(
-                """
-                chmod +x {input.script}
-                ./{input.script} {input.genotype} {input.allelelist} {input.cdna} {output.allele_headers}
-                """
-            )
+        shell:
+            "./{input.script} {input.genotype} {input.allelelist} {input.cdna} {output.allele_headers}"
 
-    ## creating a cDNA file from the typed-allele sequences
+    ## step 1: creating a cDNA file from the typed-allele sequences
+    ## this file will be appended to the reference cDNA file
+    ## filtering cDNA sequences based on matching allele headers from previous rule
+    ## step 2: creating an HLA lookup table
+    ## mapping each allele to its corresponding gene and functional class
+    ## this table is crucial for constructing the data structure used in downstream analyses
     rule allele_fasta:
         input:
             allele_headers=os.path.join(outputDir, "allele_typing", "matching_headers.txt"),
@@ -494,7 +516,7 @@ if config['wta']:
     ## quantification
     ## ------------------------------------------------------------------------------------ ##
     
-    ## creating a transcript to gene txt file & cDNA index & final cDNA
+    ## creating the reference cDNA file from the reference genome
     rule ref_cDNA_fasta:
         input:
             fasta=config['reference_genome_fasta'],
@@ -508,6 +530,11 @@ if config['wta']:
         shell:
             "kb ref -i {output.index} -g {output.t2g} -f1 {output.fasta} {input.fasta} {input.gtf}"
 
+    ## combining typed-allele sequences into the reference cDNA file
+    ## before adding the sequences of the HLA typed alleles into the reference cDNA file for quantification
+    ## the HLA sequences already present must be removed
+    ## once the original HLA sequences are cleared
+    ## the newly typed allele sequences can be appended to the reference cDNA file
     rule final_cDNA_fasta:
         input:
             allele_cDNA=os.path.join(outputDir, "allele_typing", "allele_cDNA.fasta"),
@@ -523,11 +550,12 @@ if config['wta']:
             shell(
                 """
                 genes=$(echo {params.genes} | sed 's/ /|/g')
-                chmod +x {input.script}
                 ./{input.script} {input.allele_cDNA} {input.genes_cDNA} "$genes" {output.cDNA}
                 """
             )
 
+    ## creating a transcript to gene (t2g) txt file
+    ## this is necessary to run kallisto
     rule create_t2g: 
         input:
             cDNA=os.path.join(outputDir, "quant", "cDNA.fa")
@@ -539,7 +567,9 @@ if config['wta']:
             """
             grep "^>" {input.cDNA} | sed 's/^.//' | tr " " "\t" > {output.t2g}
             """
-
+    
+    ## creating cDNA index
+    ## this is necessary to run kallisto
     rule create_index:
         input:
             cDNA=os.path.join(outputDir, "quant", "cDNA.fa")
@@ -551,6 +581,10 @@ if config['wta']:
             "kallisto index -i {output.index} {input.cDNA}"
 
     ## quantification using kallisto
+    ## kallisto uses --mm (multi-mapping) parameter to 
+    ## i) enhance sensitivity in detecting HLA alleles
+    ## ii) enable better correlation with traditional quantification methods
+    ## this parameter does not affect non-HLA gene quantification
     rule quantification:
         input:
             index=os.path.join(outputDir, "quant", "index.idx"),
