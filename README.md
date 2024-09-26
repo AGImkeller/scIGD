@@ -58,13 +58,13 @@ curl -L https://api.github.com/repos/AGImkeller/scIGD/tarball -o scIGD.tar.gz
 Next, extract the data. On Linux, run:
 
 ```bash
-tar --wildcards -xf scIGD.tar.gz --strip 1 "*/data" "*/demo" "*/scripts" "*/Snakefile" "*/config.yaml" "*/environment.yaml"
+tar --wildcards -xf scIGD.tar.gz --strip 1 "*/data" "*/demo" "*/scripts" "*/Snakefile" "*/config.yaml" "*/environment.yaml" && chmod +x ./scripts/*.sh
 ```
 
 On MacOS, run:
 
 ```bash
-tar -xf scIGD.tar.gz --strip 1 "*/data" "*/demo" "*/scripts" "*/Snakefile" "*/config.yaml" "*/environment.yaml"
+tar -xf scIGD.tar.gz --strip 1 "*/data" "*/demo" "*/scripts" "*/Snakefile" "*/config.yaml" "*/environment.yaml" && chmod +x ./scripts/*.sh
 ```
 
 This will create three files: `Snakefile`, `config.yaml` and `environment.yaml`. In addition, three folders will be created: `data`, `demo` and `scripts` (Figure 2).
