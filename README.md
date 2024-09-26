@@ -20,7 +20,7 @@ The workflow is organized into three distinct stages, each addressing specific o
 
 2. **Allele-typing procedures on immune genes:**
    
-   - Following demultiplexing, the workflow executes allele-typing procedures on HLAs. This process utilizes *[arcasHLA](https://github.com/RabadanLab/arcasHLA)*, which extracts reads mapped to chromosome 6 (housing the HLA genes), and uses the *[IMGT/HLA database](https://www.ebi.ac.uk/ipd/imgt/hla/)* and an Expectation-Maximization (EM) model to determine the most representative HLA alleles.
+   - Following demultiplexing, the workflow executes allele-typing procedures on HLAs. This process utilizes *[arcasHLA](https://github.com/RabadanLab/arcasHLA)*, which extracts reads mapped to chromosome 6 (housing the HLA genes), and uses the *[IMGT/HLA](https://www.ebi.ac.uk/ipd/imgt/hla/)* database and an Expectation-Maximization (EM) model to determine the most representative HLA alleles.
 
    - The output for each gene will consist of one or two alleles that best match the data.
 
