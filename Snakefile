@@ -13,14 +13,22 @@ rule all:
 ## demultiplexing, if needed
 ## ------------------------------------------------------------------------------------ ##
 if config['multiplex']:
+
+    ## the goal is to demultiplex original FASTQ file into multiple donor-specific FASTQ files, one for each sample tag
+    ## steps:
+    ## 1. identify the correct sample tag for each cellular barcode (dataframe 1)
+    ## 2. extract the read IDs associated with each cellular barcode (dataframe 2)
+    ## 3. join both dataframes to match cellular barcodes with their sample tags and read IDs
+    ## 4. create separate dataframes for each sample tag, each containing the read IDs for that tag
+    ## 5. using the read IDs, split the original FASTQ file into multiple donor-specific FASTQ files
     
     ## sample tag tsv file preparation
     ## changing file format to be compatible with kallisto
     rule sample_tag_prep:
         input: 
-            fasta=config['sample_tag_seqs']
+            sample_tag_fasta=config['sample_tag_seqs']
         output:
-            tsv=os.path.join(outputDir, "demultiplex", "meta", "sample_tag.tsv")
+            sample_tag_tsv=os.path.join(outputDir, "demultiplex", "meta", "sample_tag.tsv")
         log:
             os.path.join(outputDir, "demultiplex", "logs", "sample_tag_prep.log")
         script:
@@ -306,8 +314,8 @@ if not config['wta']:
     
     ## quantification using kallisto
     ## kallisto uses --mm (multi-mapping) parameter to 
-    ## i) enhance sensitivity in detecting HLA alleles
-    ## ii) enable better correlation with traditional quantification methods
+    ## i. enhance sensitivity in detecting HLA alleles
+    ## ii. enable better correlation with traditional quantification methods
     ## this parameter does not affect non-HLA gene quantification
     rule quantification:
         input:
@@ -582,8 +590,8 @@ if config['wta']:
 
     ## quantification using kallisto
     ## kallisto uses --mm (multi-mapping) parameter to 
-    ## i) enhance sensitivity in detecting HLA alleles
-    ## ii) enable better correlation with traditional quantification methods
+    ## i. enhance sensitivity in detecting HLA alleles
+    ## ii. enable better correlation with traditional quantification methods
     ## this parameter does not affect non-HLA gene quantification
     rule quantification:
         input:
