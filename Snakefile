@@ -382,12 +382,10 @@ if config['wta']:
             gtf="data/meta/gtf.gtf"
         output:
             genome_dir=directory(os.path.join(outputDir, "allele_typing", "GenomeDir"))
-        params: 
-            threads_number=config['threads_number']
         log:
             os.path.join(outputDir, "allele_typing", "logs", "genome_generation.log")
         shell:
-            "STAR --runMode genomeGenerate --genomeDir {output.genome_dir} --runThreadN {params.threads_number} --genomeSAindexNbases 14 --genomeFastaFiles {input.fasta} --sjdbGTFfile {input.gtf}"
+            "STAR --runMode genomeGenerate --genomeDir {output.genome_dir} --genomeSAindexNbases 14 --genomeFastaFiles {input.fasta} --sjdbGTFfile {input.gtf}"
 
     ## STAR alignment
     ## the shell command uses specific thresholds (30%)
@@ -441,16 +439,15 @@ if config['wta']:
         output:
             arcasHLA=directory(os.path.join(outputDir, "allele_typing", "arcasHLA_fastq"))
         params:
-            is_single=config['single_end_sequencing'],
-            threads_number=config['threads_number']
+            is_single=config['single_end_sequencing']
         log:
             os.path.join(outputDir, "allele_typing", "logs", "reads_extract.log")
         run:
             shell("arcasHLA reference --version 3.9.0 -v")
             if str(params.is_single).lower() == 'true':
-                shell("arcasHLA extract {input.bam} -o {output.arcasHLA} -t {params.threads_number} -v --single")
+                shell("arcasHLA extract {input.bam} -o {output.arcasHLA} -v --single")
             if str(params.is_single).lower() == 'false':
-                shell("arcasHLA extract {input.bam} -o {output.arcasHLA} -t {params.threads_number} -v")
+                shell("arcasHLA extract {input.bam} -o {output.arcasHLA} -v")
 
     ## performing HLA allele-typing
     ## arcasHLA: step 2
@@ -462,7 +459,6 @@ if config['wta']:
         params:
             genes_to_be_allele_typed=config['genes_to_be_allele_typed'],
             is_single=config['single_end_sequencing'],
-            threads_number=config['threads_number'],
             alleles_dir=os.path.join(outputDir, "allele_typing", "arcasHLA_alleles")
         log:
             os.path.join(outputDir, "allele_typing", "logs", "allele_typing.log")
@@ -471,14 +467,14 @@ if config['wta']:
                 shell(
                     """
                     genes=$(echo {params.genes_to_be_allele_typed} | sed 's/HLA-//g; s/ /,/g')
-                    arcasHLA genotype {input.chr6_fastq}/*.fq.gz -o {params.alleles_dir} -g "$genes" -t {params.threads_number} -v --single
+                    arcasHLA genotype {input.chr6_fastq}/*.fq.gz -o {params.alleles_dir} -g "$genes" -v --single
                     """
                 )
             if str(params.is_single).lower() == 'false':
                 shell(
                     """
                     genes=$(echo {params.genes_to_be_allele_typed} | sed 's/HLA-//g; s/ /,/g')
-                    arcasHLA genotype {input.chr6_fastq}/*.fq.gz -o {params.alleles_dir} -g "$genes" -t {params.threads_number} -v
+                    arcasHLA genotype {input.chr6_fastq}/*.fq.gz -o {params.alleles_dir} -g "$genes" -v
                     """
                 )
 

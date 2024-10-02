@@ -17,7 +17,7 @@ output: "example_data/output"
 
 ## Required parameters regarldess of the experiment setup.
 ##--------------------------------------------------------------------------------------------
-## The maximal number of cores to use for demultiplexing, STAR and arcasHLA.
+## The maximal number of cores to use for demultiplexing and STAR alignment.
 threads_number: "4"
 
 ## Sequencing technology, possible options: 10XV1, 10XV2, 10XV3, BDWTA.
