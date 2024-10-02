@@ -128,7 +128,9 @@ On the other hand, the `data` directory serves as a space for metadata necessary
 
 - `hla_gen.fasta.gz`: A FASTA file including the DNA sequence for all HLA alleles, which have genomic sequences available.
 
-In addition, users are required to supply the following files. Example files can be found in the `demo` folder:
+In addition, users are required to supply the following files. Some example files can be found in the `demo` folder:
+
+- `FASTQ files`: Raw, gzipped FASTQ files.
 
 - `SampleTagSequences.fasta`: This is necessary **only if the data is multiplexed**. It should contain a FASTA file of sample tag sequences crucial for demultiplexing the data and generating donor-specific or sample-tag-specific FASTQ files.
 
