@@ -206,6 +206,23 @@ Example datasets and outputs are available in our data package hosted on Biocond
 
 To facilitate the analysis of this output, we offer a structured data representation in the form of an `R/Bioconductor` package named *[SingleCellAlleleExperiment](https://bioconductor.org/packages/SingleCellAlleleExperiment)*. For detailed instructions on utilizing this package, please refer to its documentation.
 
+# Quality control checks
+
+A comprehensive QC framework is essential to ensure reliable allele-specific results: 
+- `Empty-droplet filtering`: Inspect the barcode-rank knee plot to ensure a clear inflection point and exclude low-UMI barcodes.
+
+- `Library complexity`: Plot total UMI counts and detected gene counts per cell; flag cells with unusually low or high values.
+
+- `Contamination metrics`: Monitor per-cell mitochondrial and ribosomal read fractions to identify stressed or dying cells.
+
+- `Normalization assessment`: Examine the distribution of size factors across cells; should be unimodal and not overly skewed.
+
+- `Allele-ratio distribution`: Generate per-gene allele-ratio histograms; a high proportion of 0% or 100% calls may indicate coverage issues or mis-assignment.
+
+- `Cross-platform comparison`: Compare aggregate allele-ratio distributions to bulk or orthogonal allele-specific measurements, if available.
+
+- `Gene-level consistency`: Confirm that summed allele-specific counts recapitulate standard gene-level quantification (e.g., Cell Ranger, Salmon).
+
 # References
 
 ## Tools and packages
